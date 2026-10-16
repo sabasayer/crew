@@ -1,6 +1,6 @@
 {
   "name": "crew-board",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Live board of /crew agents: state, phase, progress and stale warnings, read from /tmp/crew",
   "author": { "name": "Salih Sayer" },
   "types": "./types/index.d.ts"

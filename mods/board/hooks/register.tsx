@@ -3,10 +3,15 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
 import { age, bar, isStale, parseAgent, sortChain } from './board'
+import { WIDTH, drawShip, halfBlocks, water } from './ship'
 
 const PANE = 'crew-board'
 const POLL_MS = 2_000
+const FRAME_MS = 500
 const board = atom({ plugin: 'crew-board', key: 'board' } as const, { tickets: [], now: 0 } as Board)
+
+const frame = atom({ plugin: 'crew-board', key: 'frame' } as const, 0)
+const isSailing = (t: Ticket, now: number) => t.agents.some(a => a.state === 'running' && !isStale(a, now))
 
 const LOOK: Record<string, { icon: string; color: string }> = {
   queued: { icon: '○', color: 'gray' },
@@ -44,6 +49,10 @@ export const register: Register = (on, options) => {
     await $.command.register({ name: 'crew-board', description: 'Show the live board of /crew agents' })
     await refresh($, root)
     $.clock.every(POLL_MS, () => refresh($, root))
+    $.clock.every(FRAME_MS, async () => {
+      const { tickets, now } = await read($, board)
+      if (tickets.some(t => isSailing(t, now))) await update($, frame, n => n + 1)
+    })
 
     return next(e)
   })
@@ -57,6 +66,7 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
     const { tickets, now } = await read($, board)
+    const step = await read($, frame)
     const tick = Math.floor(now / POLL_MS)
     const columns = e.viewport?.columns ?? 100
     const room = Math.max(1, (e.viewport?.rows ?? 30) - 3)
@@ -102,7 +112,8 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         {tickets.map((t, i) => {
-          const lines = 3 + t.agents.length
+          const lines = 8 + t.agents.length
+          const sea = water(step, isSailing(t, now))
           const shown = used + lines <= room || i === 0
           used += lines
 
@@ -112,7 +123,21 @@ export const register: Register = (on, options) => {
                 {t.name}
                 <Text dimColor> {'─'.repeat(Math.max(0, Math.min(columns, 100) - t.name.length - 2))}</Text>
               </Text>
-              {chain(t.agents)}
+              <Box>
+                <Box flexDirection="column" width={WIDTH + 2}>
+                  {halfBlocks(drawShip(t.agents, step, isSailing(t, now))).map(runs => (
+                    <Text>
+                      {runs.map(r => (
+                        <Text color={r.fg} backgroundColor={r.bg}>
+                          {r.t}
+                        </Text>
+                      ))}
+                    </Text>
+                  ))}
+                  <Text color={sea.fg}>{sea.t}</Text>
+                </Box>
+                <Box flexDirection="column">{chain(t.agents)}</Box>
+              </Box>
               {t.agents.map(row)}
             </Box>
           ) : null
