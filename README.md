@@ -31,6 +31,13 @@ No refresh needed.
 - A `running` agent with no update for 5 minutes shows in red with `STALE`.
 - A file that is not valid JSON shows as `unreadable`.
 
+Show one ticket only: `/crew-board <ticket>`, for example `/crew-board eng-708-mr2`.
+Type `/crew-board` with no name to see all tickets again.
+
+The first mate can open the board itself. The mod gives it a tool,
+`mcp__crew-board__crew_board_open`, with one input: `ticket`.
+Claude asks you once to allow it. Allow it for the session or always.
+
 Change the folder with the `root` option if you need to. The default is `/tmp/crew`.
 
 ## Status file contract
@@ -58,6 +65,10 @@ Unknown roles go last.
 ## Changes to suggest for `crew/SKILL.md`
 
 The first mate should make these changes. This repo does not edit the skill.
+
+0. **Open the board for this ticket.** In phase 1, after the ticket name is known,
+   call `mcp__crew-board__crew_board_open` with `ticket` set to the folder name under `/tmp/crew`.
+   Skip it if the tool is not there.
 
 1. **Write the whole chain at the start.** Before phase 2, write one file per planned
    agent with `state: queued` and an `order` number. Then the board shows what comes next.

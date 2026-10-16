@@ -10,6 +10,8 @@ const POLL_MS = 2_000
 const FRAME_MS = 500
 const board = atom({ plugin: 'crew-board', key: 'board' } as const, { tickets: [], now: 0 } as Board)
 
+const focus = atom({ plugin: 'crew-board', key: 'focus' } as const, '')
+const TOOL = 'crew_board_open'
 const frame = atom({ plugin: 'crew-board', key: 'frame' } as const, 0)
 const isSailing = (t: Ticket, now: number) => t.agents.some(a => a.state === 'running' && !isStale(a, now))
 
@@ -42,11 +44,26 @@ async function scan($: EngineInterface, root: string): Promise<Board> {
 
 const refresh = ($: EngineInterface, root: string) => scan($, root).then(next => update($, board, () => next))
 
+const show = async ($: EngineInterface, ticket: string) => {
+  await update($, focus, () => ticket)
+  await $.ui.open({ id: PANE, title: ticket ? `Crew · ${ticket}` : 'Crew' })
+}
+
 export const register: Register = (on, options) => {
   const root = String(options?.root ?? '/tmp/crew')
 
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'crew-board', description: 'Show the live board of /crew agents' })
+    await $.command.register({
+      name: 'crew-board',
+      description: 'Show the live board of /crew agents. Add a ticket name to show only that ticket',
+      argumentHint: '[ticket]',
+    })
+    await $.tool.register({
+      name: TOOL,
+      description: 'Open the crew board pane for one ticket. Call it once when a /crew run starts. The ticket is the folder name under /tmp/crew.',
+      inputSchema: { type: 'object', properties: { ticket: { type: 'string' } }, required: ['ticket'] },
+      isDeferred: false,
+    })
     await refresh($, root)
     $.clock.every(POLL_MS, () => refresh($, root))
     $.clock.every(FRAME_MS, async () => {
@@ -57,22 +74,35 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  on('command.run', { command: 'crew-board' }, async $ => {
-    await $.ui.open({ id: PANE, title: 'Crew' })
+  on('command.run', { command: 'crew-board' }, async ($, e) => {
+    const ticket = e.args.trim()
+    await show($, ticket)
 
-    return { text: 'Crew board opened.' }
+    return { text: ticket ? `Crew board opened for ${ticket}.` : 'Crew board opened.' }
+  })
+
+  on('tool.call', { tool: 'mcp__crew-board__crew_board_open' }, async ($, e) => {
+    const ticket = String((e as { ticket?: unknown }).ticket ?? '').trim()
+    await show($, ticket)
+
+    return { result: ticket ? `Crew board opened for ${ticket}.` : 'Crew board opened.' }
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
-    const { tickets, now } = await read($, board)
+    const all = await read($, board)
+    const only = (await read($, focus)).toLowerCase()
+    const tickets = only ? all.tickets.filter(t => t.name.toLowerCase() === only) : all.tickets
+    const now = all.now
     const step = await read($, frame)
     const tick = Math.floor(now / POLL_MS)
     const columns = e.viewport?.columns ?? 100
     const room = Math.max(1, (e.viewport?.rows ?? 30) - 3)
     let used = 0
 
-    if (tickets.length === 0) return <Text dimColor>No crew run found in {root}.</Text>
+    if (tickets.length === 0) {
+      return <Text dimColor>{only ? `Waiting for ${root}/${only} ... (/crew-board shows all tickets)` : `No crew run found in ${root}.`}</Text>
+    }
 
     const row = (a: Agent) => {
       const stale = isStale(a, now)
