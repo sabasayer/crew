@@ -161,7 +161,7 @@ export const register: Register = (on, options) => {
                 {t.name}
               </Text>
               <Box>
-                {'Svg' in ui ? (
+                {e.surface !== 'terminal' && 'Svg' in ui ? (
                   <ui.Svg {...svg(t, now, step)} alt={`${t.name} ship`} />
                 ) : (
                   <Box flexDirection="column" width={WIDTH + 2} flexShrink={0}>
