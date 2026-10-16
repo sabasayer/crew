@@ -127,15 +127,21 @@ export const register: Register = (on, options) => {
       )
     }
 
-    const chain = (agents: Agent[]) => (
+    const summary = (agents: Agent[]) => (
       <Text wrap="truncate-end">
-        {agents.map((a, i) => (
-          <Text>
-            <Text dimColor>{i > 0 ? ' → ' : ''}</Text>
-            <Text color={isStale(a, now) ? 'red' : (LOOK[a.state] ?? UNKNOWN).color}>{(LOOK[a.state] ?? UNKNOWN).icon} </Text>
-            <Text bold={a.state === 'running'} dimColor={a.state === 'queued'}>{a.role}</Text>
-          </Text>
-        ))}
+        <Text bold>
+          {agents.filter(a => a.state === 'done').length}/{agents.length} done
+        </Text>
+        {['running', 'blocked', 'failed', 'queued'].map(state => {
+          const n = agents.filter(a => a.state === state).length
+
+          return n ? (
+            <Text color={LOOK[state]!.color}>
+              {'  '}
+              {LOOK[state]!.icon} {n}
+            </Text>
+          ) : null
+        })}
       </Text>
     )
 
@@ -166,7 +172,7 @@ export const register: Register = (on, options) => {
                   ))}
                   <Text color={sea.fg}>{sea.t}</Text>
                 </Box>
-                <Box flexDirection="column" flexShrink={1} flexGrow={1} width={Math.max(10, columns - WIDTH - 4)}>{chain(t.agents)}</Box>
+                <Box flexDirection="column">{summary(t.agents)}</Box>
               </Box>
               {t.agents.map(row)}
             </Box>
