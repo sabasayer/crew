@@ -5,17 +5,22 @@ import { age, bar, isStale, parseAgent, sortChain } from './board'
 const at = (role: string, extra = {}) =>
   parseAgent(`${role}.json`, JSON.stringify({ role, state: 'running', updated: '2026-10-16T14:00:00Z', ...extra }), 0)
 
-test('running agent silent for over 5 minutes is stale', () => {
+test('running agent silent for over 15 minutes is stale', () => {
   const a = at('green')
-  expect(isStale(a, a.updatedMs + 4 * 60_000)).toBe(false)
-  expect(isStale(a, a.updatedMs + 6 * 60_000)).toBe(true)
-  expect(isStale({ ...a, state: 'done' }, a.updatedMs + 6 * 60_000)).toBe(false)
+  expect(isStale(a, a.updatedMs + 14 * 60_000)).toBe(false)
+  expect(isStale(a, a.updatedMs + 16 * 60_000)).toBe(true)
+  expect(isStale({ ...a, state: 'done' }, a.updatedMs + 16 * 60_000)).toBe(false)
 })
 
 test('chain order: known roles in flow order, unknown last, order field wins', () => {
   const roles = sortChain(['browser', 'zzz', 'review-spec', 'green', 'red', 'fixer'].map(r => at(r))).map(a => a.role)
   expect(roles).toEqual(['red', 'green', 'review-spec', 'fixer', 'browser', 'zzz'])
   expect(sortChain([at('red'), at('zzz', { order: 1 })])[0]?.role).toBe('zzz')
+})
+
+test('spike sorts before red and summary is read', () => {
+  expect(sortChain([at('red'), at('spike')]).map(a => a.role)).toEqual(['spike', 'red'])
+  expect(at('red', { summary: 'ok' }).summary).toBe('ok')
 })
 
 test('bad json becomes an unreadable row', () => {

@@ -119,7 +119,7 @@ export const register: Register = (on, options) => {
           <Text color={look.color}> {a.state.padEnd(8)} </Text>
           <Text color={stale ? 'red' : look.color}>{bar(a, 12, tick)}</Text>
           <Text dimColor>{count.padEnd(8)}</Text>
-          <Text> {a.phase ?? ''}</Text>
+          <Text> {(a.state === 'done' || a.state === 'failed' ? a.summary : undefined) ?? a.phase ?? ''}</Text>
           <Text color={stale ? 'red' : undefined} dimColor={!stale} bold={stale}>
             {'  '}
             {age(now - a.updatedMs)} ago{stale ? '  STALE' : ''}

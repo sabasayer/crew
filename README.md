@@ -28,7 +28,7 @@ No refresh needed.
   A stale or idle ship stays still. The flag turns green when all agents are done and red if one failed.
 - A summary beside the ship shows the counts, like `3/8 done  ▶ 2  ⏸ 1`. The rows are in chain order, top to bottom.
 - One row per agent: role, state, bar, count, phase, time since the last update.
-- A `running` agent with no update for 5 minutes shows in red with `STALE`.
+- A `running` agent with no update for 15 minutes shows in red with `STALE`.
 - A file that is not valid JSON shows as `unreadable`.
 
 Show one ticket only: `/crew-board <ticket>`, for example `/crew-board eng-708-mr2`.
@@ -74,12 +74,13 @@ One file per agent: `/tmp/crew/<ticket>/<role>.json`.
 | `state` | yes | `queued`, `running`, `blocked`, `done` or `failed`. |
 | `phase` | no | What the agent does now. |
 | `done`, `total` | no | Progress. Without them the bar is a moving block. |
+| `summary` | no | Short result text. On `done` or `failed`, the board shows it in place of `phase`. |
 | `updated` | yes | ISO time of the last write. |
 | `order` | no | Place in the chain. Lower comes first. |
 
 The mod shows any `*.json` file. It does not need a fixed list of roles.
 Without `order`, it sorts by the usual flow:
-`gate-spec, spec, red, pin, gate-tests, green, move, review-*, fixer, browser, gate-captain`.
+`gate-spec, spec, spike, red, pin, gate-tests, green, move, review-*, fixer, browser, gate-captain`.
 Unknown roles go last.
 
 ## Changes to suggest for `crew/SKILL.md`
@@ -101,7 +102,7 @@ The first mate should make these changes. This repo does not edit the skill.
 3. **Say who writes the file.** An agent writes its own file at each phase.
    The first mate writes the gate files and the `queued` files.
 4. **Write `updated` on every tool burst**, not only at a phase change.
-   Else a long phase looks stale after 5 minutes.
+   Else a long phase looks stale after 15 minutes.
 5. **Write atomically.** Write to `<role>.json.tmp`, then rename. The board then never reads half a file.
 
 ## Develop

@@ -2,6 +2,7 @@ export type Agent = {
   role: string
   state: string
   phase?: string
+  summary?: string
   done?: number
   total?: number
   order?: number

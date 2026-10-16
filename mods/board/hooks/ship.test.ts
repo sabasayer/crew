@@ -32,7 +32,7 @@ test('every face is drawn whatever the role name, and a stale agent gets a red c
     expect(skin).toBeGreaterThan(20)
   }
   const fresh = JSON.stringify(drawShip([{ role: 'x', state: 'running', updatedMs: 1000 }], 0, true, true, 2000))
-  const late = JSON.stringify(drawShip([{ role: 'x', state: 'running', updatedMs: 1000 }], 0, true, true, 1000 + 6 * 60_000))
+  const late = JSON.stringify(drawShip([{ role: 'x', state: 'running', updatedMs: 1000 }], 0, true, true, 1000 + 16 * 60_000))
   expect(late).not.toBe(fresh)
   expect(late).toContain('#e5484d')
 })

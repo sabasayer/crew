@@ -1,8 +1,8 @@
 import type { Agent } from '../types'
 
-export const STALE_MS = 5 * 60_000
+export const STALE_MS = 15 * 60_000
 
-const CHAIN = ['gate-spec', 'spec', 'red', 'pin', 'gate-tests', 'green', 'move', 'review', 'fixer', 'browser', 'gate-captain']
+const CHAIN = ['gate-spec', 'spec', 'spike', 'red', 'pin', 'gate-tests', 'green', 'move', 'review', 'fixer', 'browser', 'gate-captain']
 
 export function chainIndex(role: string) {
   const i = CHAIN.findIndex(name => role === name || role.startsWith(`${name}-`))
@@ -31,6 +31,7 @@ export function parseAgent(file: string, text: string, mtimeMs: number): Agent {
       phase: j.phase == null ? undefined : String(j.phase),
       done: typeof j.done === 'number' ? j.done : undefined,
       total: typeof j.total === 'number' ? j.total : undefined,
+      summary: j.summary == null ? undefined : String(j.summary),
       order: typeof j.order === 'number' ? j.order : undefined,
       updatedMs: Number.isNaN(updated) ? mtimeMs : updated,
     }
