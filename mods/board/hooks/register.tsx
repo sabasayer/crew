@@ -50,7 +50,7 @@ const show = async ($: EngineInterface, ticket: string) => {
 }
 
 export const register: Register = (on, options) => {
-  const characters = options?.style !== 'simple'
+  const isFull = options?.style !== 'simple'
   const root = String(options?.root ?? '/tmp/crew')
 
   on('session.start', async ($, e, next) => {
@@ -128,7 +128,7 @@ export const register: Register = (on, options) => {
         </Text>,
       ]
 
-      if (!characters) {
+      if (!isFull) {
         return (
           <Text wrap="truncate-end">
             {icon}
@@ -160,7 +160,7 @@ export const register: Register = (on, options) => {
       )
     }
 
-    const svg = (t: Ticket, at: number, n: number) => shipSvg(drawShip(t.agents, n, isSailing(t, at), characters, at), n, isSailing(t, at), 6)
+    const svg = (t: Ticket, at: number, n: number) => shipSvg(drawShip(t.agents, n, isSailing(t, at), isFull, at), n, isSailing(t, at), 6)
 
     const summary = (agents: Agent[]) => (
       <Text wrap="truncate-end">
@@ -183,8 +183,8 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         {tickets.map((t, i) => {
-          const lines = (characters ? 11 : 9) + t.agents.length * (useSvg || !characters ? 1 : 2)
-          const sea = water(step, isSailing(t, now), shipWidth(t.agents.length, characters))
+          const lines = (isFull ? 11 : 9) + t.agents.length * (useSvg || !isFull ? 1 : 2)
+          const sea = water(step, isSailing(t, now), shipWidth(t.agents.length, isFull))
           const shown = used + lines <= room || i === 0
           used += lines
 
@@ -197,8 +197,8 @@ export const register: Register = (on, options) => {
                 {useSvg ? (
                   <ui.Svg {...svg(t, now, step)} alt={`${t.name} ship`} />
                 ) : (
-                  <Box flexDirection="column" width={shipWidth(t.agents.length, characters) + 2} flexShrink={0}>
-                    {halfBlocks(drawShip(t.agents, step, isSailing(t, now), characters, now)).map(runs => (
+                  <Box flexDirection="column" width={shipWidth(t.agents.length, isFull) + 2} flexShrink={0}>
+                    {halfBlocks(drawShip(t.agents, step, isSailing(t, now), isFull, now)).map(runs => (
                       <Text wrap="truncate">
                         {runs.map(r => (
                           <Text color={r.fg} backgroundColor={r.bg}>
@@ -213,7 +213,7 @@ export const register: Register = (on, options) => {
                 <Box flexDirection="column">{summary(t.agents)}</Box>
               </Box>
               {t.agents.map(a => (
-                <Box marginBottom={useSvg || !characters ? 0 : 1}>{row(a)}</Box>
+                <Box marginBottom={useSvg || !isFull ? 0 : 1}>{row(a)}</Box>
               ))}
             </Box>
           ) : null
