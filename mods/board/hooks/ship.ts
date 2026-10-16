@@ -37,6 +37,17 @@ const HAT_SHAPES: Record<string, { rows: [string, string]; color?: string }> = {
   fixer: { rows: ['.XGX.', 'XXXXX'], color: GOLD },
   browser: { rows: ['XXXXX', 'BBBBB'], color: '#e8e4d8' },
 }
+const MINI_SHAPES: Record<string, [string, string]> = {
+  gate: ['.X.', 'XGX'],
+  red: ['..X', 'XXX'],
+  pin: ['..X', 'XXX'],
+  green: ['X.X', 'XXX'],
+  move: ['X.X', 'XXX'],
+  review: ['.X.', 'XXX'],
+  fixer: ['XGX', 'XXX'],
+  browser: ['XXX', 'BBB'],
+}
+const MINI_CAP: [string, string] = ['.XX', 'XXX']
 const CAP: { rows: [string, string]; color?: string } = { rows: ['.XXX.', 'XXXXX'] }
 
 const hash = (text: string) => [...text].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7)
@@ -53,10 +64,12 @@ export function hatFor(role: string) {
 }
 
 export function hatGrid(role: string): Grid {
-  const hat = hatFor(role)
-  const paint = (ch: string) => (ch === 'X' ? hat.color : ch === 'G' ? GOLD : ch === 'B' ? BAND : null)
+  const family = Object.keys(HAT_SHAPES).find(name => role === name || role.startsWith(`${name}-`))
+  const rows = family ? MINI_SHAPES[family]! : MINI_CAP
+  const { color } = hatFor(role)
+  const paint = (ch: string) => (ch === 'X' ? color : ch === 'G' ? GOLD : ch === 'B' ? BAND : null)
 
-  return hat.rows.map(row => [...row].map(paint))
+  return rows.map(row => [...row].map(paint))
 }
 
 function drawFace(put: (x: number, y: number, color: string) => void, x: number, top: number, a: Agent, isLate: boolean) {

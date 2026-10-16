@@ -59,11 +59,11 @@ test('svg ship has rects, a fixed size and a moving sea', () => {
   expect(a.source).not.toBe(b.source)
 })
 
-test('row hat is the 5 by 2 hat of the ship, as one text line or a small svg', () => {
+test('row hat is a 3 by 2 mini hat, as one text line or a small svg', () => {
   const lines = halfBlocks(hatGrid('green'))
   expect(lines).toHaveLength(1)
-  expect(lines[0]!.reduce((n, r) => n + r.t.length, 0)).toBe(5)
-  expect(hatSvg('green', 3).width).toBe(15)
+  expect(lines[0]!.reduce((n, r) => n + r.t.length, 0)).toBe(3)
+  expect(hatSvg('green', 3).width).toBe(9)
   expect(hatSvg('green', 3).height).toBe(6)
   expect(hatSvg('red', 3).source).not.toBe(hatSvg('green', 3).source)
 })

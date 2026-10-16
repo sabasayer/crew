@@ -52,7 +52,7 @@ The option `characters` is `on` or `off`. The default is `on`.
   - The face shows the state: smile when done, frown when failed, flat mouth when blocked,
     small mouth when running, gray face when queued. A running face hops.
   - The collar has the state color.
-  - Each agent row shows the same hat, small, before the role name. This ties a row to its face on the ship.
+  - Each agent row shows a mini version of the hat (3 by 2 pixels) before the role name. This ties a row to its face on the ship.
 - `off`: each agent is a small dot.
 
 Change it in the plugin settings, or in `~/.claude/settings.json`:
