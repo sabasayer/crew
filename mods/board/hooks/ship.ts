@@ -3,16 +3,22 @@ import type { Agent } from '../types'
 export type Run = { t: string; fg?: string; bg?: string }
 type Grid = (string | null)[][]
 
-export const WIDTH = 34
+const PLAIN_WIDTH = 22
+const MAX_FACES = 8
+const FACE_STEP = 6
 const SAIL = '#e8e4d8'
 const WOOD = '#8b5a2b'
 const HULL = '#5c3a1c'
-const SKIN = '#f2c9a0'
 const SEA = '#3b82c4'
+const SKIN_PLAIN = '#f2c9a0'
+const EYE = '#222222'
+const MOUTH = '#6b2d2d'
+const GOLD = '#e5c04b'
+const BAND = '#3b5fa8'
+const SLEEPY = '#9a9a9a'
 const CREW_X = [2, 4, 6, 10, 12, 14, 16, 18]
-const CHARACTER_X = [0, 4, 10, 14, 18, 22, 26, 30]
-const HATS = ['#d9534f', '#4f8fd9', '#e5c04b', '#9b6fd1', '#e08a3c', '#3fb3a0', '#d96fa8', '#8a8a8a']
-const LEGS = '#3a3a4a'
+const SKINS = ['#f2c9a0', '#e0ac7e', '#c68642', '#8d5524', '#ffdbac']
+const HATS = ['#4f8fd9', '#9b6fd1', '#3fb3a0', '#d96fa8', '#e08a3c', '#8a8a8a']
 const STATE_COLOR: Record<string, string> = {
   queued: '#8a8a8a',
   running: '#33c3d6',
@@ -20,12 +26,65 @@ const STATE_COLOR: Record<string, string> = {
   done: '#4fbf6f',
   failed: '#e5484d',
 }
+const HAT_SHAPES: Record<string, { rows: [string, string]; color?: string }> = {
+  gate: { rows: ['.XXX.', 'XXGXX'], color: '#e8e4d8' },
+  red: { rows: ['....X', 'XXXXX'], color: '#d9534f' },
+  pin: { rows: ['....X', 'XXXXX'], color: '#d9534f' },
+  green: { rows: ['X.X.X', 'XXXXX'], color: '#4fbf6f' },
+  move: { rows: ['X.X.X', 'XXXXX'], color: '#4fbf6f' },
+  review: { rows: ['..X..', '.XXX.'] },
+  fixer: { rows: ['.XGX.', 'XXXXX'], color: GOLD },
+  browser: { rows: ['XXXXX', 'BBBBB'], color: '#e8e4d8' },
+}
+const CAP: { rows: [string, string]; color?: string } = { rows: ['.XXX.', 'XXXXX'] }
 
 const hash = (text: string) => [...text].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7)
 
+export function shipWidth(count: number, characters: boolean) {
+  return characters ? Math.max(24, Math.min(count, MAX_FACES) * FACE_STEP) : PLAIN_WIDTH
+}
+
+export function hatFor(role: string) {
+  const family = Object.keys(HAT_SHAPES).find(name => role === name || role.startsWith(`${name}-`))
+  const shape = family ? HAT_SHAPES[family]! : CAP
+
+  return { rows: shape.rows, color: shape.color ?? HATS[hash(role) % HATS.length]! }
+}
+
+function drawFace(put: (x: number, y: number, color: string) => void, x: number, top: number, a: Agent) {
+  const look = hash(a.role)
+  const skin = a.state === 'queued' ? SLEEPY : SKINS[(look >> 3) % SKINS.length]!
+  const hat = hatFor(a.role)
+  const paint = (ch: string) => (ch === 'X' ? hat.color : ch === 'G' ? GOLD : ch === 'B' ? BAND : null)
+
+  hat.rows.forEach((row, r) => [...row].forEach((ch, c) => paint(ch) && put(x + c, top + r, paint(ch)!)))
+  for (let c = 0; c < 5; c++) {
+    put(x + c, top + 2, skin)
+    put(x + c, top + 3, skin)
+  }
+  for (let c = 1; c <= 3; c++) put(x + c, top + 4, skin)
+  const eye = a.state === 'failed' ? STATE_COLOR.failed! : EYE
+  put(x + 1, top + 2, eye)
+  put(x + 3, top + 2, eye)
+  if (a.state === 'done') {
+    put(x + 1, top + 3, MOUTH)
+    put(x + 3, top + 3, MOUTH)
+    put(x + 2, top + 4, MOUTH)
+  } else if (a.state === 'failed') {
+    put(x + 2, top + 3, MOUTH)
+    put(x + 1, top + 4, MOUTH)
+    put(x + 3, top + 4, MOUTH)
+  } else if (a.state === 'blocked') {
+    for (let c = 1; c <= 3; c++) put(x + c, top + 3, MOUTH)
+  } else if (a.state === 'running') put(x + 2, top + 3, MOUTH)
+  for (let c = 1; c <= 3; c++) put(x + c, top + 5, STATE_COLOR[a.state] ?? '#e5484d')
+}
+
 export function drawShip(agents: Agent[], frame: number, isSailing: boolean, characters = false): Grid {
-  const deck = characters ? 9 : 7
-  const grid: Grid = Array.from({ length: deck + 3 }, () => Array<string | null>(WIDTH).fill(null))
+  const width = shipWidth(agents.length, characters)
+  const deck = characters ? 11 : 7
+  const mast = characters ? Math.floor(width / 2) : 8
+  const grid: Grid = Array.from({ length: deck + 3 }, () => Array<string | null>(width).fill(null))
   const dy = isSailing && frame % 2 ? 1 : 0
   const put = (x: number, y: number, color: string) => {
     if (grid[y + dy]?.[x] !== undefined) grid[y + dy]![x] = color
@@ -34,42 +93,21 @@ export function drawShip(agents: Agent[], frame: number, isSailing: boolean, cha
   const anyFailed = agents.some(a => a.state === 'failed')
   const flag = anyFailed ? STATE_COLOR.failed! : allDone ? STATE_COLOR.done! : '#d9534f'
 
-  for (let y = 0; y < deck; y++) put(8, y, WOOD)
-  put(9, 0, flag)
-  if (isSailing && frame % 2) put(10, 0, flag)
+  for (let y = 0; y < deck; y++) put(mast, y, WOOD)
+  put(mast + 1, 0, flag)
+  if (isSailing && frame % 2) put(mast + 2, 0, flag)
   for (let y = 1; y <= 4; y++) {
-    for (let x = 8 - y; x < 8; x++) put(x, y, SAIL)
-    for (let x = 9; x <= 9 + y; x++) put(x, y, SAIL)
+    for (let x = mast - y; x < mast; x++) put(x, y, SAIL)
+    for (let x = mast + 1; x <= mast + 1 + y; x++) put(x, y, SAIL)
   }
-  for (let x = 0; x < WIDTH; x++) put(x, deck, HULL)
-  for (let x = 2; x < WIDTH - 2; x++) put(x, deck + 1, HULL)
+  for (let x = 0; x < width; x++) put(x, deck, HULL)
+  for (let x = 2; x < width - 2; x++) put(x, deck + 1, HULL)
 
-  const spots = characters ? CHARACTER_X : CREW_X
-  agents.slice(0, spots.length).forEach((a, i) => {
-    const x = spots[i]!
-    const body = STATE_COLOR[a.state] ?? '#e5484d'
-    const working = a.state === 'running' && (frame + i) % 2 === 1
-    if (!characters) {
-      put(x, deck - 2 - (working ? 1 : 0), SKIN)
-      put(x, deck - 1 - (working ? 1 : 0), body)
-
-      return
-    }
-    const look = hash(a.role)
-    const hat = HATS[look % HATS.length]!
-    const top = deck - 4
-    put(x + 1, top, hat)
-    if (look % 2) {
-      put(x, top, hat)
-      put(x + 2, top, hat)
-    }
-    put(x + 1, top + 1, SKIN)
-    put(x + 1, top + 2, body)
-    const arms = working ? top + 1 : top + 2
-    put(x, arms, body)
-    put(x + 2, arms, body)
-    put(x, top + 3, LEGS)
-    put(x + 2, top + 3, LEGS)
+  agents.slice(0, MAX_FACES).forEach((a, i) => {
+    const hop = a.state === 'running' && (frame + i) % 2 === 1 ? 1 : 0
+    if (characters) return drawFace(put, i * FACE_STEP, deck - 6 - hop, a)
+    put(CREW_X[i]!, deck - 2 - hop, SKIN_PLAIN)
+    put(CREW_X[i]!, deck - 1 - hop, STATE_COLOR[a.state] ?? '#e5484d')
   })
 
   return grid
@@ -93,10 +131,10 @@ export function halfBlocks(grid: Grid): Run[][] {
   return lines
 }
 
-export function water(frame: number, isSailing: boolean): Run {
+export function water(frame: number, isSailing: boolean, width: number): Run {
   const shift = isSailing ? frame % 4 : 0
 
-  return { t: '≈≈~~'.repeat(WIDTH).slice(shift, shift + WIDTH), fg: SEA }
+  return { t: '≈≈~~'.repeat(Math.ceil(width / 4) + 1).slice(shift, shift + width), fg: SEA }
 }
 
 export function shipSvg(grid: Grid, frame: number, isSailing: boolean, px: number) {
@@ -117,11 +155,11 @@ export function shipSvg(grid: Grid, frame: number, isSailing: boolean, px: numbe
   })
   const shift = isSailing ? frame % 4 : 0
   const waveTop = grid.length * px
-  for (let x = 0; x < WIDTH; x++) {
+  for (let x = 0; x < (grid[0]?.length ?? 0); x++) {
     const high = (x + shift) % 4 < 2
     rects.push(`<rect x="${x * px}" y="${waveTop + (high ? 0 : px / 2)}" width="${px}" height="${px / 2}" fill="${SEA}"/>`)
   }
-  const width = WIDTH * px
+  const width = (grid[0]?.length ?? 0) * px
   const height = waveTop + px
 
   return { source: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${rects.join('')}</svg>`, width, height }

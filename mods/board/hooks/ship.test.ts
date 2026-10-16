@@ -1,6 +1,8 @@
 import { expect, test } from 'claude-code/testing'
 
-import { drawShip, halfBlocks, shipSvg, water, WIDTH } from './ship'
+import { drawShip, halfBlocks, hatFor, shipSvg, shipWidth, water } from './ship'
+
+const WIDTH = shipWidth(1, false)
 
 const agent = (state: string) => ({ role: 'x', state, updatedMs: 0 })
 
@@ -13,18 +15,26 @@ test('ship is 5 text lines of the full width, bobbing only while sailing', () =>
   expect(JSON.stringify(halfBlocks(drawShip([agent('running')], 1, true)))).not.toBe(JSON.stringify(lines))
 })
 
-test('characters mode is taller and gives each role its own look', () => {
-  const lines = halfBlocks(drawShip([agent('done')], 0, false, true))
-  expect(lines).toHaveLength(6)
-  const a = JSON.stringify(halfBlocks(drawShip([{ ...agent('done'), role: 'red' }], 0, false, true)))
-  const b = JSON.stringify(halfBlocks(drawShip([{ ...agent('done'), role: 'fixer' }], 0, false, true)))
-  expect(a).not.toBe(b)
+test('characters mode draws faces: taller, wider with more agents, one face per state', () => {
+  expect(halfBlocks(drawShip([agent('done')], 0, false, true))).toHaveLength(7)
+  expect(shipWidth(8, true)).toBeGreaterThan(shipWidth(2, true))
+  const face = (state: string) => JSON.stringify(halfBlocks(drawShip([agent(state)], 0, false, true)))
+  const faces = ['done', 'failed', 'blocked', 'running', 'queued'].map(face)
+  expect(new Set(faces).size).toBe(5)
+})
+
+test('hat shape follows the role family and review roles get different colors', () => {
+  expect(hatFor('green').rows).not.toEqual(hatFor('red').rows)
+  expect(hatFor('review-spec').rows).toEqual(hatFor('review-standards').rows)
+  expect(hatFor('review-spec').color).not.toBe(hatFor('review-standards').color)
+  expect(hatFor('red').color).toBe('#d9534f')
+  expect(hatFor('whatever').rows).toEqual(hatFor('other').rows)
 })
 
 test('water scrolls only while sailing and keeps its width', () => {
-  expect(water(1, true).t).not.toBe(water(0, true).t)
-  expect(water(1, false).t).toBe(water(0, false).t)
-  expect(water(3, true).t).toHaveLength(WIDTH)
+  expect(water(1, true, WIDTH).t).not.toBe(water(0, true, WIDTH).t)
+  expect(water(1, false, WIDTH).t).toBe(water(0, false, WIDTH).t)
+  expect(water(3, true, WIDTH).t).toHaveLength(WIDTH)
 })
 
 test('svg ship has rects, a fixed size and a moving sea', () => {

@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
 import { age, bar, isStale, parseAgent, sortChain } from './board'
-import { WIDTH, drawShip, halfBlocks, shipSvg, water } from './ship'
+import { drawShip, halfBlocks, shipSvg, shipWidth, water } from './ship'
 
 const PANE = 'crew-board'
 const POLL_MS = 2_000
@@ -151,8 +151,8 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         {tickets.map((t, i) => {
-          const lines = 9 + t.agents.length
-          const sea = water(step, isSailing(t, now))
+          const lines = (characters ? 11 : 9) + t.agents.length
+          const sea = water(step, isSailing(t, now), shipWidth(t.agents.length, characters))
           const shown = used + lines <= room || i === 0
           used += lines
 
@@ -165,7 +165,7 @@ export const register: Register = (on, options) => {
                 {e.surface !== 'terminal' && 'Svg' in ui ? (
                   <ui.Svg {...svg(t, now, step)} alt={`${t.name} ship`} />
                 ) : (
-                  <Box flexDirection="column" width={WIDTH + 2} flexShrink={0}>
+                  <Box flexDirection="column" width={shipWidth(t.agents.length, characters) + 2} flexShrink={0}>
                     {halfBlocks(drawShip(t.agents, step, isSailing(t, now), characters)).map(runs => (
                       <Text wrap="truncate">
                         {runs.map(r => (

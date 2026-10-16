@@ -40,12 +40,19 @@ Claude asks you once to allow it. Allow it for the session or always.
 
 Change the folder with the `root` option if you need to. The default is `/tmp/crew`.
 
-## Crew characters (option)
+## Crew faces (option)
 
 The option `characters` is `on` or `off`. The default is `on`.
-- `on`: each agent is a small pixel character on the deck. The hat comes from the role name,
-  so each role keeps its own look. The body color shows the state. The arms go up while it runs.
-- `off`: each agent is a small dot, as before.
+- `on`: each agent is a small pixel face with a hat, up to 8 on the ship.
+  - The hat shape follows the role: captain cap for `gate-*`, bandana for `red` and `pin`,
+    tricorn for `green` and `move`, pointed hat for `review-*`, hard hat for `fixer`,
+    sailor cap for `browser`, plain cap for any other role.
+  - The hat color is fixed for `red`, `green`, `fixer`, `gate-*` and `browser`.
+    Other roles get a color from their name. So two `review-*` agents get different colors.
+  - The face shows the state: smile when done, frown when failed, flat mouth when blocked,
+    small mouth when running, gray face when queued. A running face hops.
+  - The collar has the state color.
+- `off`: each agent is a small dot.
 
 Change it in the plugin settings, or in `~/.claude/settings.json`:
 
@@ -104,8 +111,8 @@ claude plugin validate mods/board
 claude plugin test mods/board
 ```
 
-The tests cover the logic in `mods/board/hooks/board.ts`: stale check, chain order,
-bad JSON, bar and age. The pane drawing is not tested by a script. Check it by eye with demo files:
+The tests cover the logic in `mods/board/hooks/board.ts` and `ship.ts`: stale check, chain order,
+bad JSON, bar and age, ship shape, hats and faces. The pane drawing is not tested by a script. Check it by eye with demo files:
 
 ```sh
 mkdir -p /tmp/crew/demo && echo '{"role":"red","state":"running","phase":"demo","done":3,"total":10,"updated":"'$(date -u +%FT%TZ)'"}' > /tmp/crew/demo/red.json
