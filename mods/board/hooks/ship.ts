@@ -3,14 +3,14 @@ import type { Agent } from '../types'
 export type Run = { t: string; fg?: string; bg?: string }
 type Grid = (string | null)[][]
 
-export const WIDTH = 28
+export const WIDTH = 34
 const SAIL = '#e8e4d8'
 const WOOD = '#8b5a2b'
 const HULL = '#5c3a1c'
 const SKIN = '#f2c9a0'
 const SEA = '#3b82c4'
 const CREW_X = [2, 4, 6, 10, 12, 14, 16, 18]
-const CHARACTER_X = [1, 4, 10, 13, 16, 19, 22, 25]
+const CHARACTER_X = [0, 4, 10, 14, 18, 22, 26, 30]
 const HATS = ['#d9534f', '#4f8fd9', '#e5c04b', '#9b6fd1', '#e08a3c', '#3fb3a0', '#d96fa8', '#8a8a8a']
 const LEGS = '#3a3a4a'
 const STATE_COLOR: Record<string, string> = {
@@ -41,8 +41,8 @@ export function drawShip(agents: Agent[], frame: number, isSailing: boolean, cha
     for (let x = 8 - y; x < 8; x++) put(x, y, SAIL)
     for (let x = 9; x <= 9 + y; x++) put(x, y, SAIL)
   }
-  for (let x = 1; x <= WIDTH - 2; x++) put(x, deck, HULL)
-  for (let x = 3; x <= WIDTH - 4; x++) put(x, deck + 1, HULL)
+  for (let x = 0; x < WIDTH; x++) put(x, deck, HULL)
+  for (let x = 2; x < WIDTH - 2; x++) put(x, deck + 1, HULL)
 
   const spots = characters ? CHARACTER_X : CREW_X
   agents.slice(0, spots.length).forEach((a, i) => {
