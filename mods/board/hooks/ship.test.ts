@@ -23,6 +23,20 @@ test('characters mode draws faces: taller, wider with more agents, one face per 
   expect(new Set(faces).size).toBe(5)
 })
 
+test('every face is drawn whatever the role name, and a stale agent gets a red collar', () => {
+  const roles = ['gate-spec', 'red', 'green', 'review-spec', 'review-standards', 'fixer', 'browser', 'zzz', 'a', 'b']
+  for (const role of roles) {
+    const grid = drawShip([{ role, state: 'done', updatedMs: 0 }], 0, false, true)
+    expect(grid.every(row => row.every(cell => cell !== undefined))).toBe(true)
+    const skin = grid.flat().filter(c => c && /^#[0-9a-f]{6}$/.test(c)).length
+    expect(skin).toBeGreaterThan(20)
+  }
+  const fresh = JSON.stringify(drawShip([{ role: 'x', state: 'running', updatedMs: 1000 }], 0, true, true, 2000))
+  const late = JSON.stringify(drawShip([{ role: 'x', state: 'running', updatedMs: 1000 }], 0, true, true, 1000 + 6 * 60_000))
+  expect(late).not.toBe(fresh)
+  expect(late).toContain('#e5484d')
+})
+
 test('hat shape follows the role family and review roles get different colors', () => {
   expect(hatFor('green').rows).not.toEqual(hatFor('red').rows)
   expect(hatFor('review-spec').rows).toEqual(hatFor('review-standards').rows)

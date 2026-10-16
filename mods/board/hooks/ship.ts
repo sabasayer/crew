@@ -1,4 +1,5 @@
 import type { Agent } from '../types'
+import { isStale } from './board'
 
 export type Run = { t: string; fg?: string; bg?: string }
 type Grid = (string | null)[][]
@@ -51,9 +52,9 @@ export function hatFor(role: string) {
   return { rows: shape.rows, color: shape.color ?? HATS[hash(role) % HATS.length]! }
 }
 
-function drawFace(put: (x: number, y: number, color: string) => void, x: number, top: number, a: Agent) {
+function drawFace(put: (x: number, y: number, color: string) => void, x: number, top: number, a: Agent, isLate: boolean) {
   const look = hash(a.role)
-  const skin = a.state === 'queued' ? SLEEPY : SKINS[(look >> 3) % SKINS.length]!
+  const skin = a.state === 'queued' ? SLEEPY : SKINS[(look >>> 3) % SKINS.length]!
   const hat = hatFor(a.role)
   const paint = (ch: string) => (ch === 'X' ? hat.color : ch === 'G' ? GOLD : ch === 'B' ? BAND : null)
 
@@ -77,10 +78,10 @@ function drawFace(put: (x: number, y: number, color: string) => void, x: number,
   } else if (a.state === 'blocked') {
     for (let c = 1; c <= 3; c++) put(x + c, top + 3, MOUTH)
   } else if (a.state === 'running') put(x + 2, top + 3, MOUTH)
-  for (let c = 1; c <= 3; c++) put(x + c, top + 5, STATE_COLOR[a.state] ?? '#e5484d')
+  for (let c = 1; c <= 3; c++) put(x + c, top + 5, isLate ? STATE_COLOR.failed! : (STATE_COLOR[a.state] ?? '#e5484d'))
 }
 
-export function drawShip(agents: Agent[], frame: number, isSailing: boolean, characters = false): Grid {
+export function drawShip(agents: Agent[], frame: number, isSailing: boolean, characters = false, now = 0): Grid {
   const width = shipWidth(agents.length, characters)
   const deck = characters ? 11 : 7
   const mast = characters ? Math.floor(width / 2) : 8
@@ -104,10 +105,11 @@ export function drawShip(agents: Agent[], frame: number, isSailing: boolean, cha
   for (let x = 2; x < width - 2; x++) put(x, deck + 1, HULL)
 
   agents.slice(0, MAX_FACES).forEach((a, i) => {
-    const hop = a.state === 'running' && (frame + i) % 2 === 1 ? 1 : 0
-    if (characters) return drawFace(put, i * FACE_STEP, deck - 6 - hop, a)
+    const isLate = now > 0 && isStale(a, now)
+    const hop = a.state === 'running' && !isLate && (frame + i) % 2 === 1 ? 1 : 0
+    if (characters) return drawFace(put, i * FACE_STEP, deck - 6 - hop, a, isLate)
     put(CREW_X[i]!, deck - 2 - hop, SKIN_PLAIN)
-    put(CREW_X[i]!, deck - 1 - hop, STATE_COLOR[a.state] ?? '#e5484d')
+    put(CREW_X[i]!, deck - 1 - hop, isLate ? STATE_COLOR.failed! : (STATE_COLOR[a.state] ?? '#e5484d'))
   })
 
   return grid

@@ -128,7 +128,7 @@ export const register: Register = (on, options) => {
       )
     }
 
-    const svg = (t: Ticket, at: number, n: number) => shipSvg(drawShip(t.agents, n, isSailing(t, at), characters), n, isSailing(t, at), 6)
+    const svg = (t: Ticket, at: number, n: number) => shipSvg(drawShip(t.agents, n, isSailing(t, at), characters, at), n, isSailing(t, at), 6)
 
     const summary = (agents: Agent[]) => (
       <Text wrap="truncate-end">
@@ -166,7 +166,7 @@ export const register: Register = (on, options) => {
                   <ui.Svg {...svg(t, now, step)} alt={`${t.name} ship`} />
                 ) : (
                   <Box flexDirection="column" width={shipWidth(t.agents.length, characters) + 2} flexShrink={0}>
-                    {halfBlocks(drawShip(t.agents, step, isSailing(t, now), characters)).map(runs => (
+                    {halfBlocks(drawShip(t.agents, step, isSailing(t, now), characters, now)).map(runs => (
                       <Text wrap="truncate">
                         {runs.map(r => (
                           <Text color={r.fg} backgroundColor={r.bg}>
