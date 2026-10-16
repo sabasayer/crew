@@ -19,7 +19,7 @@ const UNKNOWN = { icon: '?', color: 'red' }
 
 async function scan($: EngineInterface, root: string): Promise<Board> {
   const now = Date.now()
-  const folders = (await $.fs.list(root).catch(() => [])).filter(f => f.kind === 'directory')
+  const folders = (await $.fs.list(root).catch(() => [])).filter(f => f.kind === 'dir')
   const tickets = await Promise.all(
     folders.map(async (folder): Promise<Ticket> => {
       const dir = `${root}/${folder.name}`
@@ -32,7 +32,7 @@ async function scan($: EngineInterface, root: string): Promise<Board> {
     }),
   )
 
-  return { tickets: tickets.sort((a, b) => b.newestMs - a.newestMs), now }
+  return { tickets: tickets.filter(t => t.agents.length > 0).sort((a, b) => b.newestMs - a.newestMs), now }
 }
 
 const refresh = ($: EngineInterface, root: string) => scan($, root).then(next => update($, board, () => next))
