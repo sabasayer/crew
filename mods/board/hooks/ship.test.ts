@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { drawShip, halfBlocks, hatFor, shipSvg, shipWidth, water } from './ship'
+import { drawShip, halfBlocks, hatFor, hatGrid, hatSvg, shipSvg, shipWidth, water } from './ship'
 
 const WIDTH = shipWidth(1, false)
 
@@ -57,4 +57,13 @@ test('svg ship has rects, a fixed size and a moving sea', () => {
   expect(a.source.startsWith('<svg')).toBe(true)
   expect(a.width).toBe(WIDTH * 6)
   expect(a.source).not.toBe(b.source)
+})
+
+test('row hat is the 5 by 2 hat of the ship, as one text line or a small svg', () => {
+  const lines = halfBlocks(hatGrid('green'))
+  expect(lines).toHaveLength(1)
+  expect(lines[0]!.reduce((n, r) => n + r.t.length, 0)).toBe(5)
+  expect(hatSvg('green', 3).width).toBe(15)
+  expect(hatSvg('green', 3).height).toBe(6)
+  expect(hatSvg('red', 3).source).not.toBe(hatSvg('green', 3).source)
 })

@@ -52,6 +52,13 @@ export function hatFor(role: string) {
   return { rows: shape.rows, color: shape.color ?? HATS[hash(role) % HATS.length]! }
 }
 
+export function hatGrid(role: string): Grid {
+  const hat = hatFor(role)
+  const paint = (ch: string) => (ch === 'X' ? hat.color : ch === 'G' ? GOLD : ch === 'B' ? BAND : null)
+
+  return hat.rows.map(row => [...row].map(paint))
+}
+
 function drawFace(put: (x: number, y: number, color: string) => void, x: number, top: number, a: Agent, isLate: boolean) {
   const look = hash(a.role)
   const skin = a.state === 'queued' ? SLEEPY : SKINS[(look >>> 3) % SKINS.length]!
@@ -139,7 +146,7 @@ export function water(frame: number, isSailing: boolean, width: number): Run {
   return { t: '≈≈~~'.repeat(Math.ceil(width / 4) + 1).slice(shift, shift + width), fg: SEA }
 }
 
-export function shipSvg(grid: Grid, frame: number, isSailing: boolean, px: number) {
+function pixelRects(grid: Grid, px: number) {
   const rects: string[] = []
   grid.forEach((row, y) => {
     let x = 0
@@ -155,14 +162,31 @@ export function shipSvg(grid: Grid, frame: number, isSailing: boolean, px: numbe
       x = end + 1
     }
   })
+
+  return rects
+}
+
+const svgOf = (rects: string[], width: number, height: number) => ({
+  source: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${rects.join('')}</svg>`,
+  width,
+  height,
+})
+
+export function shipSvg(grid: Grid, frame: number, isSailing: boolean, px: number) {
+  const rects = pixelRects(grid, px)
   const shift = isSailing ? frame % 4 : 0
   const waveTop = grid.length * px
-  for (let x = 0; x < (grid[0]?.length ?? 0); x++) {
+  const columns = grid[0]?.length ?? 0
+  for (let x = 0; x < columns; x++) {
     const high = (x + shift) % 4 < 2
     rects.push(`<rect x="${x * px}" y="${waveTop + (high ? 0 : px / 2)}" width="${px}" height="${px / 2}" fill="${SEA}"/>`)
   }
-  const width = (grid[0]?.length ?? 0) * px
-  const height = waveTop + px
 
-  return { source: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${rects.join('')}</svg>`, width, height }
+  return svgOf(rects, columns * px, waveTop + px)
+}
+
+export function hatSvg(role: string, px: number) {
+  const grid = hatGrid(role)
+
+  return svgOf(pixelRects(grid, px), (grid[0]?.length ?? 0) * px, grid.length * px)
 }

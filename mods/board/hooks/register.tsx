@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
 import { age, bar, isStale, parseAgent, sortChain } from './board'
-import { drawShip, halfBlocks, shipSvg, shipWidth, water } from './ship'
+import { drawShip, halfBlocks, hatGrid, hatSvg, shipSvg, shipWidth, water } from './ship'
 
 const PANE = 'crew-board'
 const POLL_MS = 2_000
@@ -92,6 +92,7 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const ui = $.ui.resolve(e)
     const { Box, Text } = ui
+    const useSvg = e.surface !== 'terminal' && 'Svg' in ui
     const all = await read($, board)
     const only = (await read($, focus)).toLowerCase()
     const tickets = only ? all.tickets.filter(t => t.name.toLowerCase() === only) : all.tickets
@@ -110,11 +111,13 @@ export const register: Register = (on, options) => {
       const look = LOOK[a.state] ?? UNKNOWN
       const count = a.done != null && a.total != null ? ` ${a.done}/${a.total}` : ''
 
-      return (
-        <Text wrap="truncate-end">
-          <Text color={stale ? 'red' : look.color} bold>
-            {look.icon}{' '}
-          </Text>
+      const icon = (
+        <Text color={stale ? 'red' : look.color} bold>
+          {look.icon}{' '}
+        </Text>
+      )
+      const rest = (
+        <>
           <Text bold>{a.role.padEnd(18)}</Text>
           <Text color={look.color}> {a.state.padEnd(8)} </Text>
           <Text color={stale ? 'red' : look.color}>{bar(a, 12, tick)}</Text>
@@ -124,6 +127,37 @@ export const register: Register = (on, options) => {
             {'  '}
             {age(now - a.updatedMs)} ago{stale ? '  STALE' : ''}
           </Text>
+        </>
+      )
+
+      if (!characters) {
+        return (
+          <Text wrap="truncate-end">
+            {icon}
+            {rest}
+          </Text>
+        )
+      }
+      if (useSvg) {
+        return (
+          <Box>
+            {icon}
+            <ui.Svg {...hatSvg(a.role, 3)} alt={`${a.role} hat`} />
+            <Text wrap="truncate-end"> {rest}</Text>
+          </Box>
+        )
+      }
+
+      return (
+        <Text wrap="truncate-end">
+          {icon}
+          {halfBlocks(hatGrid(a.role))[0]!.map(r => (
+            <Text color={r.fg} backgroundColor={r.bg}>
+              {r.t}
+            </Text>
+          ))}
+          <Text> </Text>
+          {rest}
         </Text>
       )
     }
@@ -162,7 +196,7 @@ export const register: Register = (on, options) => {
                 {t.name}
               </Text>
               <Box>
-                {e.surface !== 'terminal' && 'Svg' in ui ? (
+                {useSvg ? (
                   <ui.Svg {...svg(t, now, step)} alt={`${t.name} ship`} />
                 ) : (
                   <Box flexDirection="column" width={shipWidth(t.agents.length, characters) + 2} flexShrink={0}>
