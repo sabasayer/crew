@@ -96,7 +96,6 @@ export const register: Register = (on, options) => {
     const now = all.now
     const step = await read($, frame)
     const tick = Math.floor(now / POLL_MS)
-    const columns = e.viewport?.columns ?? 100
     const room = Math.max(1, (e.viewport?.rows ?? 30) - 3)
     let used = 0
 
