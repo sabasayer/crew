@@ -72,8 +72,9 @@ export const register: Register = (on, options) => {
       return (
         <Text wrap="truncate-end">
           <Text color={stale ? 'red' : look.color} bold>
-            {look.icon} {a.role.padEnd(18)}
+            {look.icon}{' '}
           </Text>
+          <Text bold>{a.role.padEnd(18)}</Text>
           <Text color={look.color}> {a.state.padEnd(8)} </Text>
           <Text color={stale ? 'red' : look.color}>{bar(a, 12, tick)}</Text>
           <Text dimColor>{count.padEnd(8)}</Text>
@@ -89,9 +90,10 @@ export const register: Register = (on, options) => {
     const chain = (agents: Agent[]) => (
       <Text wrap="truncate-end">
         {agents.map((a, i) => (
-          <Text color={isStale(a, now) ? 'red' : (LOOK[a.state] ?? UNKNOWN).color} bold={a.state === 'running'}>
-            {i > 0 ? ' → ' : ''}
-            {(LOOK[a.state] ?? UNKNOWN).icon} {a.role}
+          <Text>
+            <Text dimColor>{i > 0 ? ' → ' : ''}</Text>
+            <Text color={isStale(a, now) ? 'red' : (LOOK[a.state] ?? UNKNOWN).color}>{(LOOK[a.state] ?? UNKNOWN).icon} </Text>
+            <Text bold={a.state === 'running'} dimColor={a.state === 'queued'}>{a.role}</Text>
           </Text>
         ))}
       </Text>
