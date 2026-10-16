@@ -57,7 +57,12 @@ The option `style` is `full` or `simple`. The default is `full`.
   - `simple`: each agent is a small one-pixel crew member on the deck. No hats, no faces,
   and the rows are compact.
 
-Change it in the plugin settings, or in `~/.claude/settings.json`:
+Switch it with a command. The pane changes at once, and the choice is kept for the next sessions:
+
+- `/crew-board style` switches between `full` and `simple`.
+- `/crew-board style simple` or `/crew-board style full` picks one.
+
+The command wins over the setting. The setting is the default for a new install. Change it in the plugin settings, or in `~/.claude/settings.json`:
 
 ```json
 { "pluginConfigs": { "crew-board": { "options": { "style": "simple" } } } }

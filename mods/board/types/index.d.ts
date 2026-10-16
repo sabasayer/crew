@@ -14,6 +14,6 @@ export type Board = { tickets: Ticket[]; now: number }
 
 declare module 'claude-code' {
   interface PluginState {
-    'crew-board': { board: Board; frame: number; focus: string }
+    'crew-board': { board: Board; frame: number; focus: string; style: string }
   }
 }

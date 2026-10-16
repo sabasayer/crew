@@ -11,6 +11,7 @@ const FRAME_MS = 500
 const board = atom({ plugin: 'crew-board', key: 'board' } as const, { tickets: [], now: 0 } as Board)
 
 const focus = atom({ plugin: 'crew-board', key: 'focus' } as const, '')
+const style = atom({ plugin: 'crew-board', key: 'style' } as const, '')
 const TOOL = 'crew_board_open'
 const frame = atom({ plugin: 'crew-board', key: 'frame' } as const, 0)
 const isSailing = (t: Ticket, now: number) => t.agents.some(a => a.state === 'running' && !isStale(a, now))
@@ -50,14 +51,14 @@ const show = async ($: EngineInterface, ticket: string) => {
 }
 
 export const register: Register = (on, options) => {
-  const isFull = options?.style !== 'simple'
+  const configured = String(options?.style ?? 'full')
   const root = String(options?.root ?? '/tmp/crew')
 
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'crew-board',
-      description: 'Show the live board of /crew agents. Add a ticket name to show only that ticket',
-      argumentHint: '[ticket]',
+      description: 'Show the live board of /crew agents. Add a ticket name to show only that ticket. Use "style" to switch between full and simple, or "style full" or "style simple" to pick one',
+      argumentHint: '[ticket | style [full|simple]]',
     })
     await $.tool.register({
       name: TOOL,
@@ -65,6 +66,8 @@ export const register: Register = (on, options) => {
       inputSchema: { type: 'object', properties: { ticket: { type: 'string' } }, required: ['ticket'] },
       isDeferred: false,
     })
+    const saved = await $.store.get('style')
+    if (saved === 'full' || saved === 'simple') await update($, style, () => saved)
     await refresh($, root)
     $.clock.every(POLL_MS, () => refresh($, root))
     $.clock.every(FRAME_MS, async () => {
@@ -76,6 +79,17 @@ export const register: Register = (on, options) => {
   })
 
   on('command.run', { command: 'crew-board' }, async ($, e) => {
+    const styleArgs = e.args.trim().match(/^style(?:\s+(\S+))?$/i)
+    if (styleArgs) {
+      const asked = styleArgs[1]?.toLowerCase()
+      if (asked && asked !== 'full' && asked !== 'simple') return { text: 'Style is "full" or "simple".' }
+      const now = (await read($, style)) || configured
+      const next = asked ?? (now === 'simple' ? 'full' : 'simple')
+      await update($, style, () => next)
+      await $.store.set('style', next)
+
+      return { text: `Crew board style: ${next}.` }
+    }
     const ticket = e.args.trim()
     await show($, ticket)
 
@@ -90,6 +104,7 @@ export const register: Register = (on, options) => {
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    const isFull = ((await read($, style)) || configured) !== 'simple'
     const ui = $.ui.resolve(e)
     const { Box, Text } = ui
     const useSvg = e.surface !== 'terminal' && 'Svg' in ui
