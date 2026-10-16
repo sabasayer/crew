@@ -3,14 +3,16 @@ import type { Agent } from '../types'
 export type Run = { t: string; fg?: string; bg?: string }
 type Grid = (string | null)[][]
 
-export const WIDTH = 22
-const HEIGHT = 10
+export const WIDTH = 28
 const SAIL = '#e8e4d8'
 const WOOD = '#8b5a2b'
 const HULL = '#5c3a1c'
 const SKIN = '#f2c9a0'
 const SEA = '#3b82c4'
 const CREW_X = [2, 4, 6, 10, 12, 14, 16, 18]
+const CHARACTER_X = [1, 4, 10, 13, 16, 19, 22, 25]
+const HATS = ['#d9534f', '#4f8fd9', '#e5c04b', '#9b6fd1', '#e08a3c', '#3fb3a0', '#d96fa8', '#8a8a8a']
+const LEGS = '#3a3a4a'
 const STATE_COLOR: Record<string, string> = {
   queued: '#8a8a8a',
   running: '#33c3d6',
@@ -19,8 +21,11 @@ const STATE_COLOR: Record<string, string> = {
   failed: '#e5484d',
 }
 
-export function drawShip(agents: Agent[], frame: number, isSailing: boolean): Grid {
-  const grid: Grid = Array.from({ length: HEIGHT }, () => Array<string | null>(WIDTH).fill(null))
+const hash = (text: string) => [...text].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7)
+
+export function drawShip(agents: Agent[], frame: number, isSailing: boolean, characters = false): Grid {
+  const deck = characters ? 9 : 7
+  const grid: Grid = Array.from({ length: deck + 3 }, () => Array<string | null>(WIDTH).fill(null))
   const dy = isSailing && frame % 2 ? 1 : 0
   const put = (x: number, y: number, color: string) => {
     if (grid[y + dy]?.[x] !== undefined) grid[y + dy]![x] = color
@@ -29,21 +34,42 @@ export function drawShip(agents: Agent[], frame: number, isSailing: boolean): Gr
   const anyFailed = agents.some(a => a.state === 'failed')
   const flag = anyFailed ? STATE_COLOR.failed! : allDone ? STATE_COLOR.done! : '#d9534f'
 
-  for (let y = 0; y <= 6; y++) put(8, y, WOOD)
+  for (let y = 0; y < deck; y++) put(8, y, WOOD)
   put(9, 0, flag)
   if (isSailing && frame % 2) put(10, 0, flag)
   for (let y = 1; y <= 4; y++) {
     for (let x = 8 - y; x < 8; x++) put(x, y, SAIL)
     for (let x = 9; x <= 9 + y; x++) put(x, y, SAIL)
   }
-  for (let x = 1; x <= 20; x++) put(x, 7, HULL)
-  for (let x = 3; x <= 18; x++) put(x, 8, HULL)
+  for (let x = 1; x <= WIDTH - 2; x++) put(x, deck, HULL)
+  for (let x = 3; x <= WIDTH - 4; x++) put(x, deck + 1, HULL)
 
-  agents.slice(0, CREW_X.length).forEach((a, i) => {
-    const x = CREW_X[i]!
-    const hop = a.state === 'running' && (frame + i) % 2 ? 1 : 0
-    put(x, 5 - hop, SKIN)
-    put(x, 6 - hop, STATE_COLOR[a.state] ?? '#e5484d')
+  const spots = characters ? CHARACTER_X : CREW_X
+  agents.slice(0, spots.length).forEach((a, i) => {
+    const x = spots[i]!
+    const body = STATE_COLOR[a.state] ?? '#e5484d'
+    const working = a.state === 'running' && (frame + i) % 2 === 1
+    if (!characters) {
+      put(x, deck - 2 - (working ? 1 : 0), SKIN)
+      put(x, deck - 1 - (working ? 1 : 0), body)
+
+      return
+    }
+    const look = hash(a.role)
+    const hat = HATS[look % HATS.length]!
+    const top = deck - 4
+    put(x + 1, top, hat)
+    if (look % 2) {
+      put(x, top, hat)
+      put(x + 2, top, hat)
+    }
+    put(x + 1, top + 1, SKIN)
+    put(x + 1, top + 2, body)
+    const arms = working ? top + 1 : top + 2
+    put(x, arms, body)
+    put(x + 2, arms, body)
+    put(x, top + 3, LEGS)
+    put(x + 2, top + 3, LEGS)
   })
 
   return grid

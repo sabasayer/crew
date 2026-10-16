@@ -40,6 +40,19 @@ Claude asks you once to allow it. Allow it for the session or always.
 
 Change the folder with the `root` option if you need to. The default is `/tmp/crew`.
 
+## Crew characters (option)
+
+The option `characters` is `on` or `off`. The default is `on`.
+- `on`: each agent is a small pixel character on the deck. The hat comes from the role name,
+  so each role keeps its own look. The body color shows the state. The arms go up while it runs.
+- `off`: each agent is a small dot, as before.
+
+Change it in the plugin settings, or in `~/.claude/settings.json`:
+
+```json
+{ "pluginConfigs": { "crew-board": { "options": { "characters": "off" } } } }
+```
+
 ## Status file contract
 
 One file per agent: `/tmp/crew/<ticket>/<role>.json`.

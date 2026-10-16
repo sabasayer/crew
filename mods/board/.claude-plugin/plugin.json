@@ -1,7 +1,21 @@
 {
   "name": "crew-board",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Live board of /crew agents: state, phase, progress and stale warnings, read from /tmp/crew",
-  "author": { "name": "Salih Sayer" },
-  "types": "./types/index.d.ts"
+  "author": {
+    "name": "Salih Sayer"
+  },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "characters": {
+      "type": "string",
+      "title": "Crew characters",
+      "description": "Draw each crew member as a small pixel character with its own hat. Off shows plain dots.",
+      "default": "on",
+      "options": [
+        "on",
+        "off"
+      ]
+    }
+  }
 }
