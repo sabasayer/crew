@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { drawShip, halfBlocks, water, WIDTH } from './ship'
+import { drawShip, halfBlocks, shipSvg, water, WIDTH } from './ship'
 
 const agent = (state: string) => ({ role: 'x', state, updatedMs: 0 })
 
@@ -17,4 +17,12 @@ test('water scrolls only while sailing and keeps its width', () => {
   expect(water(1, true).t).not.toBe(water(0, true).t)
   expect(water(1, false).t).toBe(water(0, false).t)
   expect(water(3, true).t).toHaveLength(WIDTH)
+})
+
+test('svg ship has rects, a fixed size and a moving sea', () => {
+  const a = shipSvg(drawShip([agent('running')], 0, true), 0, true, 6)
+  const b = shipSvg(drawShip([agent('running')], 0, true), 1, true, 6)
+  expect(a.source.startsWith('<svg')).toBe(true)
+  expect(a.width).toBe(WIDTH * 6)
+  expect(a.source).not.toBe(b.source)
 })

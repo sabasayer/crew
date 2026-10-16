@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
 import { age, bar, isStale, parseAgent, sortChain } from './board'
-import { WIDTH, drawShip, halfBlocks, water } from './ship'
+import { WIDTH, drawShip, halfBlocks, shipSvg, water } from './ship'
 
 const PANE = 'crew-board'
 const POLL_MS = 2_000
@@ -89,7 +89,8 @@ export const register: Register = (on, options) => {
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
-    const { Box, Text } = $.ui.resolve(e)
+    const ui = $.ui.resolve(e)
+    const { Box, Text } = ui
     const all = await read($, board)
     const only = (await read($, focus)).toLowerCase()
     const tickets = only ? all.tickets.filter(t => t.name.toLowerCase() === only) : all.tickets
@@ -126,6 +127,8 @@ export const register: Register = (on, options) => {
       )
     }
 
+    const svg = (t: Ticket, at: number, n: number) => shipSvg(drawShip(t.agents, n, isSailing(t, at)), n, isSailing(t, at), 6)
+
     const summary = (agents: Agent[]) => (
       <Text wrap="truncate-end">
         <Text bold>
@@ -158,18 +161,22 @@ export const register: Register = (on, options) => {
                 {t.name}
               </Text>
               <Box>
-                <Box flexDirection="column" width={WIDTH + 2} flexShrink={0}>
-                  {halfBlocks(drawShip(t.agents, step, isSailing(t, now))).map(runs => (
-                    <Text wrap="truncate">
-                      {runs.map(r => (
-                        <Text color={r.fg} backgroundColor={r.bg}>
-                          {r.t}
-                        </Text>
-                      ))}
-                    </Text>
-                  ))}
-                  <Text color={sea.fg}>{sea.t}</Text>
-                </Box>
+                {'Svg' in ui ? (
+                  <ui.Svg {...svg(t, now, step)} alt={`${t.name} ship`} />
+                ) : (
+                  <Box flexDirection="column" width={WIDTH + 2} flexShrink={0}>
+                    {halfBlocks(drawShip(t.agents, step, isSailing(t, now))).map(runs => (
+                      <Text wrap="truncate">
+                        {runs.map(r => (
+                          <Text color={r.fg} backgroundColor={r.bg}>
+                            {r.t}
+                          </Text>
+                        ))}
+                      </Text>
+                    ))}
+                    <Text color={sea.fg}>{sea.t}</Text>
+                  </Box>
+                )}
                 <Box flexDirection="column">{summary(t.agents)}</Box>
               </Box>
               {t.agents.map(row)}

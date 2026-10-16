@@ -23,7 +23,7 @@ Type `/crew-board`. A pane opens. It checks `/tmp/crew` every 2 seconds.
 No refresh needed.
 
 - One block per ticket (a folder in `/tmp/crew/`). The newest ticket is first.
-- Each ticket has a tiny pixel ship. One crew member stands on deck for each agent, colored by state.
+- Each ticket has a tiny pixel ship (half-block characters in the terminal, an SVG in the desktop app). One crew member stands on deck for each agent, colored by state.
   The ship bobs and the sea moves while an agent runs and is not stale. Crew members of running agents hop.
   A stale or idle ship stays still. The flag turns green when all agents are done and red if one failed.
 - A summary beside the ship shows the counts, like `3/8 done  ▶ 2  ⏸ 1`. The rows are in chain order, top to bottom.

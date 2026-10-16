@@ -72,3 +72,31 @@ export function water(frame: number, isSailing: boolean): Run {
 
   return { t: '≈≈~~'.repeat(WIDTH).slice(shift, shift + WIDTH), fg: SEA }
 }
+
+export function shipSvg(grid: Grid, frame: number, isSailing: boolean, px: number) {
+  const rects: string[] = []
+  grid.forEach((row, y) => {
+    let x = 0
+    while (x < row.length) {
+      const color = row[x]
+      if (!color) {
+        x++
+        continue
+      }
+      let end = x
+      while (row[end + 1] === color) end++
+      rects.push(`<rect x="${x * px}" y="${y * px}" width="${(end - x + 1) * px}" height="${px}" fill="${color}"/>`)
+      x = end + 1
+    }
+  })
+  const shift = isSailing ? frame % 4 : 0
+  const waveTop = grid.length * px
+  for (let x = 0; x < WIDTH; x++) {
+    const high = (x + shift) % 4 < 2
+    rects.push(`<rect x="${x * px}" y="${waveTop + (high ? 0 : px / 2)}" width="${px}" height="${px / 2}" fill="${SEA}"/>`)
+  }
+  const width = WIDTH * px
+  const height = waveTop + px
+
+  return { source: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${rects.join('')}</svg>`, width, height }
+}
