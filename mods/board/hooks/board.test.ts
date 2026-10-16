@@ -21,6 +21,7 @@ test('chain order: known roles in flow order, unknown last, order field wins', (
 test('spike sorts before red and summary is read', () => {
   expect(sortChain([at('red'), at('spike')]).map(a => a.role)).toEqual(['spike', 'red'])
   expect(at('red', { summary: 'ok' }).summary).toBe('ok')
+  expect(at('red', { summary: '' }).summary).toBeUndefined()
 })
 
 test('bad json becomes an unreadable row', () => {

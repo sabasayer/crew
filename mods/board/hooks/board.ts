@@ -31,7 +31,7 @@ export function parseAgent(file: string, text: string, mtimeMs: number): Agent {
       phase: j.phase == null ? undefined : String(j.phase),
       done: typeof j.done === 'number' ? j.done : undefined,
       total: typeof j.total === 'number' ? j.total : undefined,
-      summary: j.summary == null ? undefined : String(j.summary),
+      summary: j.summary ? String(j.summary) : undefined,
       order: typeof j.order === 'number' ? j.order : undefined,
       updatedMs: Number.isNaN(updated) ? mtimeMs : updated,
     }
