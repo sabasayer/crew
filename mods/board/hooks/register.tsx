@@ -157,7 +157,6 @@ export const register: Register = (on, options) => {
             <Box flexDirection="column" marginBottom={1}>
               <Text bold color="magenta">
                 {t.name}
-                <Text dimColor> {'─'.repeat(Math.max(0, Math.min(columns, 100) - t.name.length - 2))}</Text>
               </Text>
               <Box>
                 <Box flexDirection="column" width={WIDTH + 2} flexShrink={0}>
