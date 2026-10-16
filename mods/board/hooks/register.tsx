@@ -50,7 +50,7 @@ const show = async ($: EngineInterface, ticket: string) => {
 }
 
 export const register: Register = (on, options) => {
-  const characters = options?.characters !== 'off'
+  const characters = options?.style !== 'simple'
   const root = String(options?.root ?? '/tmp/crew')
 
   on('session.start', async ($, e, next) => {
@@ -183,7 +183,7 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         {tickets.map((t, i) => {
-          const lines = (characters ? 11 : 9) + t.agents.length * (useSvg ? 1 : 2)
+          const lines = (characters ? 11 : 9) + t.agents.length * (useSvg || !characters ? 1 : 2)
           const sea = water(step, isSailing(t, now), shipWidth(t.agents.length, characters))
           const shown = used + lines <= room || i === 0
           used += lines
@@ -213,7 +213,7 @@ export const register: Register = (on, options) => {
                 <Box flexDirection="column">{summary(t.agents)}</Box>
               </Box>
               {t.agents.map(a => (
-                <Box marginBottom={useSvg ? 0 : 1}>{row(a)}</Box>
+                <Box marginBottom={useSvg || !characters ? 0 : 1}>{row(a)}</Box>
               ))}
             </Box>
           ) : null

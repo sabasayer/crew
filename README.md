@@ -22,7 +22,6 @@ claude --plugin-dir ./mods/board
 Type `/crew-board`. A pane opens. It checks `/tmp/crew` every 2 seconds.
 No refresh needed.
 
-- In the terminal, a blank line separates the agent rows.
 - One block per ticket (a folder in `/tmp/crew/`). The newest ticket is first.
 - Each ticket has a tiny pixel ship (half-block characters in the terminal, an SVG in the desktop app). One crew member stands on deck for each agent, colored by state.
   The ship bobs and the sea moves while an agent runs and is not stale. Crew members of running agents hop.
@@ -41,10 +40,11 @@ Claude asks you once to allow it. Allow it for the session or always.
 
 Change the folder with the `root` option if you need to. The default is `/tmp/crew`.
 
-## Crew faces (option)
+## Style (option)
 
-The option `characters` is `on` or `off`. The default is `on`.
-- `on`: each agent is a small pixel face with a hat, up to 8 on the ship.
+The option `style` is `full` or `simple`. The default is `full`.
+- `full`:
+  - Each agent is a small pixel face with a hat on the ship, up to 8.
   - The hat shape follows the role: captain cap for `gate-*`, bandana for `red` and `pin`,
     tricorn for `green` and `move`, pointed hat for `review-*`, hard hat for `fixer`,
     sailor cap for `browser`, plain cap for any other role.
@@ -52,15 +52,18 @@ The option `characters` is `on` or `off`. The default is `on`.
     Other roles get a color from their name. So two `review-*` agents get different colors.
   - The face shows the state: smile when done, frown when failed, flat mouth when blocked,
     small mouth when running, gray face when queued. A running face hops.
-  - The collar has the state color.
-  - Each agent row shows the hat before the role name: 3 by 2 pixels in the terminal, 5 by 2 in the desktop app. This ties a row to its face on the ship.
-- `off`: each agent is a small dot.
+    The collar has the state color. A stale agent has a red collar.
+  - Each agent row shows the hat before the role name: 3 by 2 pixels in the terminal, 5 by 2 in the desktop app.
+  - `simple`: each agent is a small one-pixel crew member on the deck. No hats, no faces,
+  and the rows are compact.
 
 Change it in the plugin settings, or in `~/.claude/settings.json`:
 
 ```json
-{ "pluginConfigs": { "crew-board": { "options": { "characters": "off" } } } }
+{ "pluginConfigs": { "crew-board": { "options": { "style": "simple" } } } }
 ```
+
+The older option `characters` is gone. It is ignored if it is still in your settings.
 
 ## Status file contract
 
