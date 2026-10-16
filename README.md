@@ -22,6 +22,7 @@ claude --plugin-dir ./mods/board
 Type `/crew-board`. A pane opens. It checks `/tmp/crew` every 2 seconds.
 No refresh needed.
 
+- In the terminal, a blank line separates the agent rows.
 - One block per ticket (a folder in `/tmp/crew/`). The newest ticket is first.
 - Each ticket has a tiny pixel ship (half-block characters in the terminal, an SVG in the desktop app). One crew member stands on deck for each agent, colored by state.
   The ship bobs and the sea moves while an agent runs and is not stale. Crew members of running agents hop.
@@ -52,7 +53,7 @@ The option `characters` is `on` or `off`. The default is `on`.
   - The face shows the state: smile when done, frown when failed, flat mouth when blocked,
     small mouth when running, gray face when queued. A running face hops.
   - The collar has the state color.
-  - Each agent row shows a mini version of the hat (3 by 2 pixels) before the role name. This ties a row to its face on the ship.
+  - Each agent row shows the hat before the role name: 3 by 2 pixels in the terminal, 5 by 2 in the desktop app. This ties a row to its face on the ship.
 - `off`: each agent is a small dot.
 
 Change it in the plugin settings, or in `~/.claude/settings.json`:

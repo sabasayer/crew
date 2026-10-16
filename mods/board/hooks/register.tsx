@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
 import { age, bar, isStale, parseAgent, sortChain } from './board'
-import { drawShip, halfBlocks, hatGrid, hatSvg, shipSvg, shipWidth, water } from './ship'
+import { drawShip, halfBlocks, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship'
 
 const PANE = 'crew-board'
 const POLL_MS = 2_000
@@ -149,7 +149,7 @@ export const register: Register = (on, options) => {
       return (
         <Text wrap="truncate-end">
           {icon}
-          {halfBlocks(hatGrid(a.role))[0]!.map(r => (
+          {halfBlocks(miniHatGrid(a.role))[0]!.map(r => (
             <Text color={r.fg} backgroundColor={r.bg}>
               {r.t}
             </Text>
@@ -183,7 +183,7 @@ export const register: Register = (on, options) => {
     return (
       <Box flexDirection="column">
         {tickets.map((t, i) => {
-          const lines = (characters ? 11 : 9) + t.agents.length
+          const lines = (characters ? 11 : 9) + t.agents.length * (useSvg ? 1 : 2)
           const sea = water(step, isSailing(t, now), shipWidth(t.agents.length, characters))
           const shown = used + lines <= room || i === 0
           used += lines
@@ -212,7 +212,9 @@ export const register: Register = (on, options) => {
                 )}
                 <Box flexDirection="column">{summary(t.agents)}</Box>
               </Box>
-              {t.agents.map(row)}
+              {t.agents.map(a => (
+                <Box marginBottom={useSvg ? 0 : 1}>{row(a)}</Box>
+              ))}
             </Box>
           ) : null
         })}

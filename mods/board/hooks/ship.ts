@@ -63,7 +63,7 @@ export function hatFor(role: string) {
   return { rows: shape.rows, color: shape.color ?? HATS[hash(role) % HATS.length]! }
 }
 
-export function hatGrid(role: string): Grid {
+export function miniHatGrid(role: string): Grid {
   const family = Object.keys(HAT_SHAPES).find(name => role === name || role.startsWith(`${name}-`))
   const rows = family ? MINI_SHAPES[family]! : MINI_CAP
   const { color } = hatFor(role)
@@ -196,6 +196,13 @@ export function shipSvg(grid: Grid, frame: number, isSailing: boolean, px: numbe
   }
 
   return svgOf(rects, columns * px, waveTop + px)
+}
+
+export function hatGrid(role: string): Grid {
+  const hat = hatFor(role)
+  const paint = (ch: string) => (ch === 'X' ? hat.color : ch === 'G' ? GOLD : ch === 'B' ? BAND : null)
+
+  return hat.rows.map(row => [...row].map(paint))
 }
 
 export function hatSvg(role: string, px: number) {
