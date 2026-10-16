@@ -154,9 +154,9 @@ export const register: Register = (on, options) => {
                 <Text dimColor> {'─'.repeat(Math.max(0, Math.min(columns, 100) - t.name.length - 2))}</Text>
               </Text>
               <Box>
-                <Box flexDirection="column" width={WIDTH + 2}>
+                <Box flexDirection="column" width={WIDTH + 2} flexShrink={0}>
                   {halfBlocks(drawShip(t.agents, step, isSailing(t, now))).map(runs => (
-                    <Text>
+                    <Text wrap="truncate">
                       {runs.map(r => (
                         <Text color={r.fg} backgroundColor={r.bg}>
                           {r.t}
@@ -166,7 +166,7 @@ export const register: Register = (on, options) => {
                   ))}
                   <Text color={sea.fg}>{sea.t}</Text>
                 </Box>
-                <Box flexDirection="column">{chain(t.agents)}</Box>
+                <Box flexDirection="column" flexShrink={1} flexGrow={1} width={Math.max(10, columns - WIDTH - 4)}>{chain(t.agents)}</Box>
               </Box>
               {t.agents.map(row)}
             </Box>
