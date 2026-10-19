@@ -8,6 +8,12 @@ Read first: the spec at `<spec path>`.
 - Select by role, `data-testid` or visible text. Never by library class.
 - Check what tests exist. Write only the missing ones.
 - E2E covers journeys and stacking. Component tests cover props, events and states. Never test one thing at both levels.
+- Run only the specs of this change. Follow the E2E step in the crew skill. Never write a sleep or poll loop. Never copy the repo to run tests.
+- Run Docker once, at the end of your phase. You create or check baselines.
+- Use the project's e2e and rebaseline scripts, found by the E2E step. Do not write new wrapper scripts.
+- Do not read PNG files. Read the Playwright text output: it gives the diff pixel count.
+- Write scripts, logs and reports in `~/.crew/<ticket>/`. Never write them in the project repo.
+- Need a captain decision? End your run with the question. Do not keep the run open to wait.
 - Write the status file as the Status rules in the crew skill say: write `<role>.json.tmp` then rename it; `running` first; `done` or `failed` last, with a one-line `summary`.
 
 ## Pin mode (migration)
