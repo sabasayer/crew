@@ -185,6 +185,28 @@ export const register: Register = (on, options) => {
     return { result: ticket ? `Crew board opened for ${ticket}.` : 'Crew board opened.' }
   })
 
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (e.surface !== 'mobile') return next(e)
+    const { tickets, now } = await read($, board)
+    const t = tickets[0]
+    if (!t) return next(e)
+    const { Box, Text } = $.ui.resolve(e)
+    const open = t.agents.filter(a => a.state !== 'done' && a.state !== 'queued').slice(0, 4)
+
+    return (
+      <Box flexDirection="column">
+        <Text bold>
+          Crew {t.name}: {t.agents.filter(a => a.state === 'done').length}/{t.agents.length} done
+        </Text>
+        {open.map(a => (
+          <Text color={isStale(a, now) ? 'red' : (LOOK[a.state] ?? UNKNOWN).color} wrap="truncate-end">
+            {(LOOK[a.state] ?? UNKNOWN).icon} {a.role} {a.state} {(a.state === 'failed' ? a.summary : undefined) || a.phase || ''}
+          </Text>
+        ))}
+      </Box>
+    )
+  })
+
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const isFull = ((await read($, style)) || configured) !== 'simple'
     const root = await getRoot($, rootOption)
