@@ -45,6 +45,13 @@ The board also shows old runs in `/tmp/crew`. The header shows the folder path.
 Type `/crew-board clean` to list runs older than 30 days. Nothing is deleted.
 Type `/crew-board clean yes` to delete them. It only cleans the board folder, never `/tmp/crew`.
 
+## The crew skill
+
+The plugin also ships a skill: `/crew-board:crew`. It is the first mate.
+It runs a ticket through spec, tests, code, review and ship, with gates for you.
+It writes the status files that the board shows. It reads your project docs for the dev server, the checks and the ship flow.
+The skill and its briefs are in `mods/board/skills/crew/`.
+
 ## Style (option)
 
 The option `style` is `full` or `simple`. The default is `full`.
