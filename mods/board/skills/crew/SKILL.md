@@ -37,7 +37,7 @@ Order numbers for the status files are in brackets.
 6. **Review** (60, `review-standards` and `review-spec` run in parallel). When they start, set the task state `reviewing`. Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Reject a finding in writing or fix it.
 7. **Prove** (80, `browser`). Run `/prove` once. Then spawn the browser agent with [briefs/browser.md](briefs/browser.md). Add missing mocks.
 8. **Captain test** (90, `gate-captain`). Give the captain the dev server URL with the port from `~/.crew/<ticket>/spec/port`, and the steps. Gate: captain says okay. When the captain says they tested it on the dev server, set the task state `local_testing`. Do not set it on your own guess.
-9. **Ship.** Use the project's ship flow. When the MR is open, update the task with `mr_url`. Commit only when each commit is green alone, or else squash. Watch the pipeline. Ask who reviews. Do not assign anyone yourself.
+9. **Ship.** Use the project's ship flow. When the MR is open, update the task with `mr_url`. Stage files by name. Never run `git add docs/` or `git add -A`. Commit only when each commit is green alone, or else squash. Watch the pipeline. Ask who reviews. Do not assign anyone yourself.
 
 Next MR of the same ticket: start phase 4 for it while the last MR waits for review. Use a new folder name.
 
@@ -100,16 +100,18 @@ The crew board shows the status files. Use these rules exactly.
 
 `state` is `queued`, `running`, `blocked`, `done` or `failed`. `done` and `total` are optional.
 
-Before each agent starts, tell the captain the expected time. Use the times of earlier runs when you have them. When the captain asks, show the newest line of each file. Do not say "still working".
+Before each agent starts, tell the captain the expected time. These are estimates from one earlier run: build about 50 min, each review about 1 min, fixer about 20 min, browser about 6 min. Write the estimate in the phase of the status file, for example "building, about 50 min". When the captain asks, show the newest line of each file. Do not say "still working".
 
 ## Tokens
 
 - Agents get the spec path and the files to read. They do not get the chat history.
 - Give each agent only its brief and its own gate. Review agents read the diff only.
+- An agent that needs a captain decision ends its run with the question. It does not stay open to wait.
 - An agent stops and reports when it is blocked. It does not retry the same step more than twice.
 
 ## Rules
 
+- Never write crew files, scripts or reports into the project repo. Put them in `~/.crew/<ticket>/`.
 - Never create, move or delete tags.
 - Never deploy.
 - Delete the spec after the last MR merges.
