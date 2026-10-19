@@ -8,4 +8,5 @@ Check these known risks first:
 - Styles that differ between sibling components.
 
 Done when: every finding has `file:line | problem | fix`.
+- Write no files in the project repo.
 - Write the status file as the Status rules in the crew skill say, with your own role name (`review-standards` or `review-spec`).
