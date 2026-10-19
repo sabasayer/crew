@@ -1,6 +1,8 @@
-import type { Agent } from '../types'
+import type { Agent, Ticket } from '../types'
 
 export const STALE_MS = 15 * 60_000
+export const OLD_MS = 30 * 24 * 3600_000
+export const LEGACY_ROOT = '/tmp/crew'
 
 const CHAIN = ['gate-spec', 'spec', 'spike', 'red', 'pin', 'gate-tests', 'green', 'move', 'review', 'fixer', 'browser', 'gate-captain']
 
@@ -62,3 +64,12 @@ export function bar(a: Agent, width: number, tick: number) {
 
   return '░'.repeat(at) + '██' + '░'.repeat(Math.max(0, width - at - 2))
 }
+
+export function resolveRoot(env: string | undefined, option: unknown, home: string | undefined) {
+  const raw = (env || String(option ?? '')).trim() || `${home || ''}/.crew`
+  const path = raw.startsWith('~/') ? `${home || ''}${raw.slice(1)}` : raw
+
+  return path.length > 1 ? path.replace(/\/+$/, '') : path
+}
+
+export const oldRuns = (tickets: Ticket[], now: number) => tickets.filter(t => now - t.newestMs > OLD_MS)

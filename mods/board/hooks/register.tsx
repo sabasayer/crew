@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
-import { age, bar, isStale, parseAgent, sortChain } from './board'
+import { LEGACY_ROOT, age, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board'
 import { drawShip, halfBlocks, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship'
 
 const PANE = 'crew-board'
@@ -25,8 +25,7 @@ const LOOK: Record<string, { icon: string; color: string }> = {
 }
 const UNKNOWN = { icon: '?', color: 'red' }
 
-async function scan($: EngineInterface, root: string): Promise<Board> {
-  const now = Date.now()
+async function scanRoot($: EngineInterface, root: string): Promise<Ticket[]> {
   const folders = (await $.fs.list(root).catch(() => [])).filter(f => f.kind === 'dir')
   const tickets = await Promise.all(
     folders.map(async (folder): Promise<Ticket> => {
@@ -40,10 +39,37 @@ async function scan($: EngineInterface, root: string): Promise<Board> {
     }),
   )
 
-  return { tickets: tickets.filter(t => t.agents.length > 0).sort((a, b) => b.newestMs - a.newestMs), now }
+  return tickets.filter(t => t.agents.length > 0)
+}
+
+async function scan($: EngineInterface, root: string): Promise<Board> {
+  const now = Date.now()
+  const main = await scanRoot($, root)
+  const legacy = root === LEGACY_ROOT ? [] : (await scanRoot($, LEGACY_ROOT)).filter(t => !main.some(m => m.name === t.name))
+
+  return { tickets: [...main, ...legacy].sort((a, b) => b.newestMs - a.newestMs), now }
 }
 
 const refresh = ($: EngineInterface, root: string) => scan($, root).then(next => update($, board, () => next))
+
+const cleanRuns = async ($: EngineInterface, root: string, isConfirmed: boolean) => {
+  await refresh($, root)
+  const { tickets, now } = await read($, board)
+  const folders = (await $.fs.list(root).catch(() => [])).filter(f => f.kind === 'dir').map(f => f.name)
+  const old = oldRuns(tickets, now).filter(t => folders.includes(t.name))
+  if (old.length === 0) return { text: `No runs older than 30 days in ${root}.` }
+  const names = old.map(t => `${t.name} (${Math.floor((now - t.newestMs) / 86_400_000)} days old)`).join('\n')
+  if (!isConfirmed) return { text: `Runs older than 30 days in ${root}:\n${names}\nTo delete them, type: /crew-board clean yes` }
+  const gone = await Promise.all(old.map(t => $.process.run(['rm', '-r', '--', `${root}/${t.name}`]).then(r => r.exitCode === 0)))
+  await refresh($, root)
+
+  return { text: `Deleted ${gone.filter(Boolean).length} of ${old.length} runs from ${root}.` }
+}
+
+let rootPromise: Promise<string> | undefined
+
+const getRoot = ($: EngineInterface, option: unknown) =>
+  (rootPromise ??= (async () => resolveRoot(await $.env.get('CREW_BOARD_ROOT'), option, await $.env.get('HOME')))())
 
 const show = async ($: EngineInterface, ticket: string) => {
   await update($, focus, () => ticket)
@@ -52,17 +78,19 @@ const show = async ($: EngineInterface, ticket: string) => {
 
 export const register: Register = (on, options) => {
   const configured = String(options?.style ?? 'full')
-  const root = String(options?.root ?? '/tmp/crew')
+  const rootOption = options?.root
 
   on('session.start', async ($, e, next) => {
+    const root = await getRoot($, rootOption)
+    await $.process.run(['mkdir', '-p', root]).catch(() => undefined)
     await $.command.register({
       name: 'crew-board',
-      description: 'Show the live board of /crew agents. Add a ticket name to show only that ticket. Use "style" to switch between full and simple, or "style full" or "style simple" to pick one',
-      argumentHint: '[ticket | style [full|simple]]',
+      description: 'Show the live board of /crew agents. Add a ticket name to show only that ticket. Use "style" to switch between full and simple, or "style full" or "style simple" to pick one. Use "clean" to list runs older than 30 days',
+      argumentHint: '[ticket | style [full|simple] | clean [yes]]',
     })
     await $.tool.register({
       name: TOOL,
-      description: 'Open the crew board pane for one ticket. Call it once when a /crew run starts. The ticket is the folder name under /tmp/crew.',
+      description: `Open the crew board pane for one ticket. Call it once when a /crew run starts. The ticket is the folder name under ${root}.`,
       inputSchema: { type: 'object', properties: { ticket: { type: 'string' } }, required: ['ticket'] },
       isDeferred: false,
     })
@@ -90,6 +118,13 @@ export const register: Register = (on, options) => {
 
       return { text: `Crew board style: ${next}.` }
     }
+    const cleanArgs = e.args.trim().match(/^clean(?:\s+(\S+))?$/i)
+    if (cleanArgs) {
+      const asked = cleanArgs[1]?.toLowerCase()
+      if (asked && asked !== 'yes') return { text: 'Use "clean" to list old runs, or "clean yes" to delete them.' }
+
+      return cleanRuns($, await getRoot($, rootOption), asked === 'yes')
+    }
     const ticket = e.args.trim()
     await show($, ticket)
 
@@ -105,6 +140,7 @@ export const register: Register = (on, options) => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const isFull = ((await read($, style)) || configured) !== 'simple'
+    const root = await getRoot($, rootOption)
     const ui = $.ui.resolve(e)
     const { Box, Text } = ui
     const useSvg = e.surface !== 'terminal' && 'Svg' in ui
@@ -114,7 +150,7 @@ export const register: Register = (on, options) => {
     const now = all.now
     const step = await read($, frame)
     const tick = Math.floor(now / POLL_MS)
-    const room = Math.max(1, (e.viewport?.rows ?? 30) - 3)
+    const room = Math.max(1, (e.viewport?.rows ?? 30) - 4)
     let used = 0
 
     if (tickets.length === 0) {
@@ -197,6 +233,10 @@ export const register: Register = (on, options) => {
 
     return (
       <Box flexDirection="column">
+        <Text dimColor wrap="truncate-end">
+          Files: {root}
+          {root === LEGACY_ROOT ? '' : ` (old runs in ${LEGACY_ROOT} also show)`}
+        </Text>
         {tickets.map((t, i) => {
           const lines = (isFull ? 11 : 9) + t.agents.length * (useSvg || !isFull ? 1 : 2)
           const sea = water(step, isSailing(t, now), shipWidth(t.agents.length, isFull))
