@@ -29,33 +29,44 @@ Find these in the project docs (`CLAUDE.md`, `README.md`, `package.json`). Ask t
 
 Order numbers for the status files are in brackets.
 
-1. **Fetch** (before the chain). Read the repo's `AGENTS.md` and the docs it points to. They hold the tag, deploy and dev-server rules. Run `git fetch origin`. Branch from the fresh default branch. Check the tree is clean and the dev server answers on this branch. Restart a stale server. Done when `git log origin/<default>..HEAD` is empty. Then create the task (see Task tracking).
+1. **Fetch** (before the chain). Read the repo's `AGENTS.md` and the docs it points to. They hold the tag, deploy and dev-server rules. Run `git fetch origin`. Branch from the fresh default branch. Check the tree is clean. Start the dev server on a free port (see the E2E step). Check that it answers HTTP 200 on that port, not on a default one. Restart a stale server. Write the port in `docs/specs/<ticket>.port`, so later phases use the same one. Done when `git log origin/<default>..HEAD` is empty. Then create the task (see Task tracking).
 2. **Spec** (10, `gate-spec`). Tell the captain to start a grilling session to make the spec. You cannot start it. Write the spec to `docs/specs/<ticket>.md`, untracked. Add three sections: allowed behavior changes, how the captain tests it on the dev server, and the mocks that needs. Gate: captain approves the spec.
 3. **Spike** (20, `spike`, only when a technical unknown can change the spec). Spawn with [briefs/spike.md](briefs/spike.md). One agent edits the working tree at a time. Put the answer in the spec.
 4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Back to this phase if they do not pass.
 5. **Green or Move** (50). Spawn with [briefs/green.md](briefs/green.md). It may not edit tests. Check its diff.
 6. **Review** (60, `review-standards` and `review-spec` run in parallel). When they start, set the task state `reviewing`. Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Reject a finding in writing or fix it.
 7. **Prove** (80, `browser`). Run `/prove` once. Then spawn the browser agent with [briefs/browser.md](briefs/browser.md). Add missing mocks.
-8. **Captain test** (90, `gate-captain`). Give the captain the dev server URL and the steps. Gate: captain says okay. When the captain says they tested it on the dev server, set the task state `local_testing`. Do not set it on your own guess.
+8. **Captain test** (90, `gate-captain`). Give the captain the dev server URL with the port from `docs/specs/<ticket>.port`, and the steps. Gate: captain says okay. When the captain says they tested it on the dev server, set the task state `local_testing`. Do not set it on your own guess.
 9. **Ship.** Use the project's ship flow. When the MR is open, update the task with `mr_url`. Commit only when each commit is green alone, or else squash. Watch the pipeline. Ask who reviews. Do not assign anyone yourself.
 
 Next MR of the same ticket: start phase 4 for it while the last MR waits for review. Use a new folder name.
 
-## E2E helper
+## E2E step
 
-`bin/crew-run-e2e` in this skill folder runs the specs in one call and waits inside the script. Agents never poll. Put its full path and the repo path in each agent prompt.
+Every e2e run must do these things. This holds in any repo.
 
-```
-crew-run-e2e --repo <path> --kind visual|functional --folder ~/.crew/<ticket>-mr<N> --role <role> [--project chrome] [--update-baselines] <spec>...
-```
+- Run the specs of this change in one call. The call waits by itself. Never write a sleep or poll loop.
+- Print one pass or fail result for each spec. For each failure, print the log path and the last lines.
+- Decide the rebuild by itself. Rebuild once when an input of the build changed. Otherwise reuse the last build. The agent never chooses.
+- Keep the local `.env` safe. Move it out for visual runs. Put it back after, also on failure and on kill.
+- Run visual specs in the CI Linux image, never natively. Check baselines only. Change a baseline only when the spec says so.
+- Run one container at a time. Use at most 4 workers.
+- Use a free port for every e2e run, and print the port you used. Never use a fixed or default port. If the repo's e2e script picks and prints its own free port, use that. Otherwise ask the OS for one and set it with the repo's port variable. A taken port can make Playwright reuse another agent's server and test its code. One way to ask the OS: `python3 -c 'import socket;s=socket.socket();s.bind(("",0));print(s.getsockname()[1])'`
+- Work in the real worktree. Never copy the repo to run tests.
+- Run Docker once. Green and Move run it after the last source change. Red and Pin run it at the end of their phase.
 
-- It reads the script names from `package.json`. Use `--visual-script` or `--functional-script` when it cannot find them.
-- It runs one job with 4 workers. Never run two Docker containers at once. The CPU is the limit.
-- Visual runs use the Docker rebaseline script. It checks baselines only, unless you pass `--update-baselines`.
-- Visual runs: it moves the local `.env` out and puts it back, also when the run fails.
-- Visual runs: it rebuilds once when a build input changed since the last build. Otherwise it passes `--no-build`.
-- It prints one line for each spec, and the log path and last 20 lines when a spec fails. Logs go to `logs/` in the status folder.
-- It sets the phase of `<role>.json` before and after the run. It exits non-zero when a spec fails.
+### Find the repo's scripts
+
+1. Read the repo's `AGENTS.md` and the doc it points to for e2e and visual runs.
+2. Read the `package.json` scripts and the README or e2e docs. Look for a script that runs one spec or a few specs. Look for a Docker or CI-image script for visual specs.
+3. Check each script against the list above. Write one line for each: what it covers and what it does not. Also check how it sets its port. Write: "picks its own port", "reads a port variable" or "fixed port". For a fixed port, pass a free one through the variable. If there is no variable, tell the captain the script needs a fix.
+4. Use the best script. Do each missing part by hand. For example: move `.env` out yourself, run all specs in one call with the output in a log file, and use one blocking call with a timeout.
+5. If the repo has no script, run the repo's own e2e command once. Use one blocking call. Send the output to a log file, then read the log. Do not poll.
+
+### What crew adds
+
+- Before a long call, write the phase in your status file, for example "e2e, 3 specs". Add "about X min" only when you know the time. Write the phase again after the call.
+- Write the logs to `logs/` in the status folder. It is a subfolder, so the board does not show it as an agent.
 
 ## Task tracking
 
