@@ -19,10 +19,10 @@ claude --plugin-dir ./mods/board
 
 ## Use
 
-Type `/crew-board`. A pane opens. It checks `/tmp/crew` every 2 seconds.
+Type `/crew-board`. A pane opens. It checks `~/.crew` every 2 seconds.
 No refresh needed.
 
-- One block per ticket (a folder in `/tmp/crew/`). The newest ticket is first.
+- One block per ticket (a folder in `~/.crew/`). The newest ticket is first.
 - Each ticket has a tiny pixel ship (half-block characters in the terminal, an SVG in the desktop app). One crew member stands on deck for each agent, colored by state.
   The ship bobs and the sea moves while an agent runs and is not stale. Crew members of running agents hop.
   A stale or idle ship stays still. The flag turns green when all agents are done and red if one failed.
@@ -38,7 +38,12 @@ The first mate can open the board itself. The mod gives it a tool,
 `mcp__crew-board__crew_board_open`, with one input: `ticket`.
 Claude asks you once to allow it. Allow it for the session or always.
 
-Change the folder with the `root` option if you need to. The default is `/tmp/crew`.
+The board folder is `~/.crew`. The mod creates it. It survives a restart.
+Set `CREW_BOARD_ROOT` to use another folder.
+The board also shows old runs in `/tmp/crew`. The header shows the folder path.
+
+Type `/crew-board clean` to list runs older than 30 days. Nothing is deleted.
+Type `/crew-board clean yes` to delete them. It only cleans the board folder, never `/tmp/crew`.
 
 ## Style (option)
 
@@ -72,7 +77,7 @@ The older option `characters` is gone. It is ignored if it is still in your sett
 
 ## Status file contract
 
-One file per agent: `/tmp/crew/<ticket>/<role>.json`.
+One file per agent: `~/.crew/<ticket>/<role>.json`.
 
 ```json
 {"role":"red","state":"running","phase":"writing e2e tests","done":12,"total":35,"order":2,"updated":"2026-10-16T14:40:00Z"}
@@ -98,7 +103,7 @@ Unknown roles go last.
 The first mate should make these changes. This repo does not edit the skill.
 
 0. **Open the board for this ticket.** In phase 1, after the ticket name is known,
-   call `mcp__crew-board__crew_board_open` with `ticket` set to the folder name under `/tmp/crew`.
+   call `mcp__crew-board__crew_board_open` with `ticket` set to the folder name under `~/.crew`.
    Skip it if the tool is not there.
 
 1. **Write the whole chain at the start.** Before phase 2, write one file per planned
@@ -126,7 +131,7 @@ The tests cover the logic in `mods/board/hooks/board.ts` and `ship.ts`: stale ch
 bad JSON, bar and age, ship shape, hats and faces. The pane drawing is not tested by a script. Check it by eye with demo files:
 
 ```sh
-mkdir -p /tmp/crew/demo && echo '{"role":"red","state":"running","phase":"demo","done":3,"total":10,"updated":"'$(date -u +%FT%TZ)'"}' > /tmp/crew/demo/red.json
+mkdir -p ~/.crew/demo && echo '{"role":"red","state":"running","phase":"demo","done":3,"total":10,"updated":"'$(date -u +%FT%TZ)'"}' > ~/.crew/demo/red.json
 ```
 
 ## Move this mod

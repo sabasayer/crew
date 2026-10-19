@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { age, bar, isStale, parseAgent, sortChain } from './board'
+import { age, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board'
 
 const at = (role: string, extra = {}) =>
   parseAgent(`${role}.json`, JSON.stringify({ role, state: 'running', updated: '2026-10-16T14:00:00Z', ...extra }), 0)
@@ -33,4 +33,16 @@ test('bar and age', () => {
   expect(bar(at('r'), 10, 3)).toHaveLength(10)
   expect(age(90_000)).toBe('1m')
   expect(age(3_900_000)).toBe('1h5m')
+})
+
+test('root: env wins, then option, then ~/.crew; ~ expands', () => {
+  expect(resolveRoot(undefined, undefined, '/Users/a')).toBe('/Users/a/.crew')
+  expect(resolveRoot('', '/opt/x/', '/Users/a')).toBe('/opt/x')
+  expect(resolveRoot('~/runs', '/opt/x', '/Users/a')).toBe('/Users/a/runs')
+})
+
+test('old runs are those silent for over 30 days', () => {
+  const day = 24 * 3600_000
+  const t = (name: string, ageDays: number) => ({ name, agents: [], newestMs: 100 * day - ageDays * day })
+  expect(oldRuns([t('a', 29), t('b', 31)], 100 * day).map(x => x.name)).toEqual(['b'])
 })

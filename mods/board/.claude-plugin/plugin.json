@@ -1,7 +1,7 @@
 {
   "name": "crew-board",
-  "version": "0.10.0",
-  "description": "Live board of /crew agents: state, phase, progress and stale warnings, read from /tmp/crew",
+  "version": "0.11.0",
+  "description": "Live board of /crew agents: state, phase, progress and stale warnings, read from ~/.crew",
   "author": {
     "name": "Salih Sayer"
   },
