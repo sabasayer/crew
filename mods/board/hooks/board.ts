@@ -1,4 +1,4 @@
-import type { Agent, Ticket } from '../types'
+import type { Agent, Board, Ticket } from '../types'
 
 export const STALE_MS = 15 * 60_000
 export const OLD_MS = 30 * 24 * 3600_000
@@ -73,3 +73,24 @@ export function resolveRoot(env: string | undefined, option: unknown, home: stri
 }
 
 export const oldRuns = (tickets: Ticket[], now: number) => tickets.filter(t => now - t.newestMs > OLD_MS)
+
+export type Alert = { ticket: string; role: string; kind: 'blocked' | 'failed' | 'stale'; text: string }
+
+const flag = (a: Agent, now: number) => (isStale(a, now) ? 'stale' : a.state === 'blocked' || a.state === 'failed' ? a.state : '')
+
+export function alerts(before: Board | null, after: Board): Alert[] {
+  if (!before) return []
+  const seen = new Map<string, string>()
+  for (const t of before.tickets) for (const a of t.agents) seen.set(`${t.name}/${a.role}`, flag(a, before.now))
+
+  return after.tickets.flatMap(t =>
+    t.agents.flatMap(a => {
+      const kind = flag(a, after.now)
+      if (!kind || seen.get(`${t.name}/${a.role}`) === kind) return []
+      const what = kind === 'blocked' ? 'waits for you' : kind === 'failed' ? 'failed' : 'is stale, no update for 15 minutes'
+      const detail = (kind === 'failed' ? a.summary : undefined) || a.phase
+
+      return [{ ticket: t.name, role: a.role, kind, text: `${t.name}: ${a.role} ${what}${detail ? ` - ${detail}` : ''}` } satisfies Alert]
+    }),
+  )
+}

@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { drawShip, halfBlocks, hatFor, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship'
+import { drawShip, halfBlocks, hatFor, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship.ts'
 
 const WIDTH = shipWidth(1, false)
 
