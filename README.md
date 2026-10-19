@@ -52,6 +52,9 @@ It runs a ticket through spec, tests, code, review and ship, with gates for you.
 It writes the status files that the board shows. It reads your project docs for the dev server, the checks and the ship flow.
 The skill and its briefs are in `mods/board/skills/crew/`.
 
+If you also use [mr-triage](https://github.com/sabasayer/mr-triage) and its `track-work` skill, the first mate adds a task for each branch.
+It moves the task to `reviewing` and `local_testing`, and adds the MR link. It skips this when mr-triage is not running.
+
 ## Style (option)
 
 The option `style` is `full` or `simple`. The default is `full`.

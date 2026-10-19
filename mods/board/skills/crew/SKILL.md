@@ -29,17 +29,28 @@ Find these in the project docs (`CLAUDE.md`, `README.md`, `package.json`). Ask t
 
 Order numbers for the status files are in brackets.
 
-1. **Fetch** (before the chain). Run `git fetch origin`. Branch from the fresh default branch. Check the tree is clean and the dev server answers on this branch. Restart a stale server. Done when `git log origin/<default>..HEAD` is empty.
+1. **Fetch** (before the chain). Run `git fetch origin`. Branch from the fresh default branch. Check the tree is clean and the dev server answers on this branch. Restart a stale server. Done when `git log origin/<default>..HEAD` is empty. Then create the task (see Task tracking).
 2. **Spec** (10, `gate-spec`). Talk with the captain until the spec is clear. Write the spec to `docs/specs/<ticket>.md`, untracked. Add three sections: allowed behavior changes, how the captain tests it on the dev server, and the mocks that needs. Gate: captain approves the spec.
 3. **Spike** (20, `spike`, only when a technical unknown can change the spec). Spawn with [briefs/spike.md](briefs/spike.md). One agent edits the working tree at a time. Put the answer in the spec.
 4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Back to this phase if they do not pass.
 5. **Green or Move** (50). Spawn with [briefs/green.md](briefs/green.md). It may not edit tests. Check its diff.
-6. **Review** (60, `review-standards` and `review-spec` run in parallel). Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Reject a finding in writing or fix it.
+6. **Review** (60, `review-standards` and `review-spec` run in parallel). When they start, set the task state `reviewing`. Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Reject a finding in writing or fix it.
 7. **Check** (80, `browser`). Run the project's checks. Then spawn the browser agent with [briefs/browser.md](briefs/browser.md). Add missing mocks.
-8. **Captain test** (90, `gate-captain`). Give the captain the dev server URL and the steps. Gate: captain says okay.
-9. **Ship.** Use the project's ship flow. Commit only when each commit is green alone, or else squash. Watch the pipeline. Ask who reviews. Do not assign anyone yourself.
+8. **Captain test** (90, `gate-captain`). Give the captain the dev server URL and the steps. Gate: captain says okay. When the captain says they tested it on the dev server, set the task state `local_testing`. Do not set it on your own guess.
+9. **Ship.** Use the project's ship flow. When the MR is open, update the task with `mr_url`. Commit only when each commit is green alone, or else squash. Watch the pipeline. Ask who reviews. Do not assign anyone yourself.
 
 Next MR of the same ticket: start phase 4 for it while the last MR waits for review. Use a new folder name.
+
+## Task tracking
+
+If the `track-work` skill is installed, it shows this work as a task in mr-triage. Call it with `git -C <path>` for git commands.
+
+- **Create.** At the end of Fetch, call `track-work` with: `repo` (the remote path, like `group/project`, never a folder name), `branch`, `title` and the Linear URL if there is one. Start the title with the Linear ID, like `ABC-123: short title`.
+- **MR open.** Call it again with `mr_url`. mr-triage then moves the task to MR review by itself.
+- **States you may set.** `reviewing` when the review agents start. `local_testing` when the captain says they tested it. Nothing else.
+- **States you never set.** `paused`, `released`, `testing` and `done` are the user's.
+- **Several MRs.** One task for each branch. A ticket with `<ticket>-mr<N>` folders has one task for each MR branch.
+- **If it fails.** When mr-triage is not running, or `track-work` is not installed, say so once and go on. Never start mr-triage. Never stop the run because of it.
 
 ## Status
 
