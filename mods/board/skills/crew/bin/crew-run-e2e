@@ -1,0 +1,162 @@
+#!/usr/bin/env node
+const { spawn, spawnSync, execFileSync } = require('child_process')
+const fs = require('fs')
+const path = require('path')
+
+const usage = `Usage: crew-run-e2e --repo <path> --kind visual|functional --folder <status folder> [--role <role>] [--project <name>] [--workers N] [--update-baselines] <spec>...
+One call runs all specs and waits. Visual runs use the project's Docker rebaseline script. Functional runs use its e2e script.
+Script names come from package.json. Override with --visual-script or --functional-script.
+--role names the status file in the folder. It gets the phase before and after the run.`
+
+const BUILD_MARKER = '.output/.e2e-ci-build'
+const BUILD_INPUTS = ['app', 'server', 'shared', 'i18n', 'modules', 'public', 'types', 'nuxt.config.ts', 'package.json', 'pnpm-lock.yaml', '.nuxtrc']
+
+const opts = { workers: 4, specs: [] }
+const args = process.argv.slice(2)
+for (let i = 0; i < args.length; i++) {
+  const a = args[i]
+  if (a === '--repo') opts.repo = args[++i]
+  else if (a === '--kind') opts.kind = args[++i]
+  else if (a === '--folder') opts.folder = args[++i]
+  else if (a === '--role') opts.role = args[++i]
+  else if (a === '--project') opts.project = args[++i]
+  else if (a === '--workers') opts.workers = Number(args[++i])
+  else if (a === '--update-baselines') opts.update = true
+  else if (a === '--visual-script') opts.visualScript = args[++i]
+  else if (a === '--functional-script') opts.functionalScript = args[++i]
+  else opts.specs.push(a)
+}
+if (!opts.repo || !opts.folder || !opts.specs.length || !['visual', 'functional'].includes(opts.kind)) {
+  console.error(usage)
+  process.exit(2)
+}
+
+const repo = path.resolve(opts.repo)
+const logs = path.join(opts.folder, 'logs')
+fs.mkdirSync(logs, { recursive: true })
+
+function setPhase(phase) {
+  if (!opts.role) return
+  const file = path.join(opts.folder, `${opts.role}.json`)
+  let status
+  try {
+    status = JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch {
+    return
+  }
+  status.phase = phase
+  status.updated = new Date().toISOString()
+  fs.writeFileSync(`${file}.tmp`, JSON.stringify(status))
+  fs.renameSync(`${file}.tmp`, file)
+}
+
+function findScript() {
+  const scripts = JSON.parse(fs.readFileSync(path.join(repo, 'package.json'), 'utf8')).scripts || {}
+  const name =
+    opts.kind === 'visual'
+      ? opts.visualScript || Object.keys(scripts).find(n => /rebaseline/.test(n) && /docker/.test(n) && !/storybook/.test(n))
+      : opts.functionalScript || 'test:e2e'
+  if (!name || !scripts[name]) {
+    console.error(`No ${opts.kind} script in package.json. Pass --${opts.kind}-script <name>.`)
+    process.exit(2)
+  }
+  return name
+}
+
+function buildInputsChanged() {
+  const marker = path.join(repo, BUILD_MARKER)
+  if (!fs.existsSync(marker)) return `no ${BUILD_MARKER}`
+  const built = fs.statSync(marker).mtimeMs
+  const git = (...a) => execFileSync('git', ['-C', repo, ...a], { encoding: 'utf8' }).split('\n').filter(Boolean)
+  const base = (() => {
+    try {
+      execFileSync('git', ['-C', repo, 'rev-parse', '--verify', '-q', 'origin/main'])
+      return 'origin/main'
+    } catch {
+      return 'HEAD'
+    }
+  })()
+  const files = [...git('diff', '--name-only', base, '--', ...BUILD_INPUTS), ...git('ls-files', '--others', '--exclude-standard', '--', ...BUILD_INPUTS), '.env']
+  for (const f of files) {
+    try {
+      if (fs.statSync(path.join(repo, f)).mtimeMs > built) return `${f} changed since the build`
+    } catch {
+      if (f !== '.env') return `${f} was deleted`
+    }
+  }
+  return ''
+}
+
+function runCommand(script, env) {
+  const reporter = '--reporter=list,junit'
+  const project = opts.project ? ['--project', opts.project] : []
+  if (opts.kind === 'functional') return { args: ['run', script, ...opts.specs, '--workers', String(opts.workers), reporter, ...project], env }
+  const why = buildInputsChanged()
+  console.log(why ? `build: rebuild once (${why})` : 'build: reuse the existing build')
+  const flags = [...(opts.update ? [] : ['--verify-only']), ...(why ? [] : ['--no-build']), ...project]
+  return { args: ['run', script, ...flags, '--', ...opts.specs, reporter], env: { ...env, REBASELINE_WORKERS: String(opts.workers) } }
+}
+
+function parseJunit(text) {
+  const xml = text.match(/<testsuites[\s\S]*?<\/testsuites>/)
+  const rows = new Map()
+  if (!xml) return { rows, rest: text }
+  const re = /<testcase\b([^>]*?)(\/>|>([\s\S]*?)<\/testcase>)/g
+  for (let m; (m = re.exec(xml[0])); ) {
+    const attr = n => (m[1].match(new RegExp(`\\b${n}="([^"]*)"`)) || [])[1] || ''
+    const file = attr('classname') || attr('file') || '?'
+    const row = rows.get(file) || { pass: 0, fail: 0, secs: 0 }
+    if (/<(failure|error)\b/.test(m[3] || '')) row.fail++
+    else if (!/<skipped\b/.test(m[3] || '')) row.pass++
+    row.secs += Number(attr('time')) || 0
+    rows.set(file, row)
+  }
+  return { rows, rest: text.replace(xml[0], '') }
+}
+
+async function main() {
+  const script = findScript()
+  const log = path.join(logs, `${opts.kind}-${Date.now()}.log`)
+  const envFile = path.join(repo, '.env')
+  const held = `${envFile}.crew-held`
+  const isMoved = opts.kind === 'visual' && fs.existsSync(envFile)
+  const restore = () => {
+    if (fs.existsSync(held)) fs.renameSync(held, envFile)
+  }
+  if (isMoved) fs.renameSync(envFile, held)
+  let child
+  const container = `crew-e2e-${process.pid}`
+  for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => (child?.kill('SIGTERM'), spawnSync('docker', ['rm', '-f', container], { stdio: 'ignore' }), restore(), process.exit(130)))
+  process.on('exit', restore)
+
+  setPhase(`${opts.kind === 'visual' ? 'docker visual' : 'e2e'}, ${opts.specs.length} specs, ${opts.workers} workers`)
+  const start = Date.now()
+  const run = runCommand(script, { ...process.env, REBASELINE_CONTAINER_NAME: container })
+  const out = fs.openSync(log, 'w')
+  const code = await new Promise(resolve => {
+    child = spawn('pnpm', run.args, { cwd: repo, env: run.env, stdio: ['ignore', out, out] })
+    child.on('close', c => resolve(c ?? 1))
+  })
+  restore()
+  const secs = Math.round((Date.now() - start) / 1000)
+
+  const { rows, rest } = parseJunit(fs.readFileSync(log, 'utf8'))
+  const names = opts.specs.map(s => path.basename(s))
+  const failedSpecs = new Set()
+  const table = names.map(name => {
+    const hit = [...rows].find(([file]) => file.endsWith(name))
+    const row = hit ? hit[1] : { pass: 0, fail: 0, secs: 0 }
+    const ok = hit && row.fail === 0 && row.pass > 0
+    if (!ok) failedSpecs.add(name)
+    return `${name}  ${ok ? 'pass' : 'FAIL'}  ${row.pass} passed, ${row.fail} failed  ${Math.round(row.secs)}s test time`
+  })
+  const result = code === 0 && failedSpecs.size === 0
+  setPhase(`${opts.kind} done: ${result ? 'pass' : 'FAIL'} in ${secs}s`)
+
+  console.log(table.join('\n'))
+  console.log(`result: ${result ? 'PASS' : 'FAIL'}, exit ${code}, ${secs}s total, log ${log}`)
+  if (!result) console.log(`\nLast 20 lines of ${log}:\n${rest.trimEnd().split('\n').slice(-20).join('\n')}`)
+  process.exit(result ? 0 : 1)
+}
+
+main()
