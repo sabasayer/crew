@@ -3,7 +3,7 @@
 The crew board shows the status files. Use these rules exactly. The run folder is in the crew skill.
 
 - **Folder.** Never reuse a run folder for a new run. Every top-level `*.json` file in it shows as an agent, so put other JSON in a subfolder. Screenshots and logs are fine.
-- **Open the board.** At the start of a run, call `mcp__crew-board__crew_board_open` with the folder name. Skip this if the tool is not there.
+- **Open the board.** At the start of a run, call `mcp__crew-board__crew_board_open` with the ticket name. The board then shows every MR of that ticket. Skip this if the tool is not there.
 - **Queue every role at the start.** Write one file for each planned role with `state: queued` and its `order`. Without a file, the board cannot show what comes next.
 - **Gates are roles.** One file per gate: `gate-spec`, `gate-tests`, `gate-captain`. Set `blocked` while the captain must act, and `done` after the yes. The phase text says what the captain must do.
 - **Order.** One whole number in each file. Steps of 10. Parallel agents share a number. The numbers are in the phase list of the crew skill.

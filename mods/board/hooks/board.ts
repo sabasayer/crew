@@ -72,6 +72,12 @@ export function resolveRoot(env: string | undefined, option: unknown, home: stri
   return path.length > 1 ? path.replace(/\/+$/, '') : path
 }
 
+export const inFocus = (folder: string, only: string) => {
+  const name = folder.toLowerCase()
+
+  return name === only || name.startsWith(`${only}-mr`)
+}
+
 export const oldRuns = (tickets: Ticket[], now: number) => tickets.filter(t => now - t.newestMs > OLD_MS)
 
 export type Alert = { ticket: string; role: string; kind: 'blocked' | 'failed' | 'stale'; text: string }
