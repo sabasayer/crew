@@ -57,7 +57,7 @@ Next MR of the same ticket: start phase 4 for it while the last MR waits for rev
 - **E2E runs:** [e2e.md](e2e.md). Red, Pin, Green and Move follow it.
 - **Every agent:** [briefs/common.md](briefs/common.md).
 
-Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Write the estimate in the phase of the status file, for example "building, about 50 min". When the captain asks, show the newest line of each file. Do not say "still working".
+Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Write the estimate in the phase of the status file, for example "building, about 12 min". When the captain asks, show the newest line of each file. Do not say "still working".
 
 ## Tokens
 
