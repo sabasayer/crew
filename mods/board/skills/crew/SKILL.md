@@ -35,11 +35,11 @@ Order numbers for the status files are in brackets. Each phase ends on its "Done
 
 1. **Fetch** (before the chain).
    - Read the repo's `AGENTS.md` and the docs it points to. They hold the tag, deploy and dev-server rules.
-   - Run `git fetch origin`. Branch from the fresh default branch.
+   - Run `git fetch origin`. Make a worktree for the run, with a new branch from the fresh default branch. Use the project's setup script when it has one. It copies the env files and installs. Never work in the main checkout. Runs in parallel then do not clash. Move the session into the worktree when you can.
    - Start the dev server on a free port (see [e2e.md](e2e.md)). Restart a stale server. Write the port in the spec folder, in the file `port`.
    - Create the task ([tracking.md](tracking.md)).
 
-   Done when: the tree is clean, `git log origin/<default>..HEAD` is empty, the server answers HTTP 200 on that port, the port file exists, and the task exists or you told the captain why not.
+   Done when: the worktree is clean, `git log origin/<default>..HEAD` is empty, the server answers HTTP 200 on that port, the port file exists, and the task exists or you told the captain why not.
 2. **Spec** (10, `gate-spec`). Tell the captain to start a grilling session to make the spec. You cannot start it. Write the spec to the spec folder. Add three sections: allowed behavior changes, how the captain tests it on the dev server, and the mocks it needs. Done when: the captain approves the spec.
 3. **Spike** (20, `spike`, only when a technical unknown can change the spec). Spawn with [briefs/spike.md](briefs/spike.md). One agent edits the working tree at a time. Done when: the answer is in the spec.
 4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Give the command to see them: `! git -C <worktree> diff`. The captain's session may not be in the repo, so `/diff` can fail. Back to this phase if they do not pass. Done when: the captain approves the tests.
