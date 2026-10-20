@@ -40,9 +40,9 @@ Order numbers for the status files are in brackets. Each phase ends on its "Done
    - Create the task ([tracking.md](tracking.md)).
 
    Done when: the tree is clean, `git log origin/<default>..HEAD` is empty, the server answers HTTP 200 on that port, the port file exists, and the task exists or you told the captain why not.
-2. **Spec** (10, `gate-spec`). Tell the captain to start a grilling session to make the spec. You cannot start it. Write the spec to the spec folder. Add three sections: allowed behavior changes, how the captain tests it on the dev server, and the mocks that needs. Done when: the captain approves the spec.
+2. **Spec** (10, `gate-spec`). Tell the captain to start a grilling session to make the spec. You cannot start it. Write the spec to the spec folder. Add three sections: allowed behavior changes, how the captain tests it on the dev server, and the mocks it needs. Done when: the captain approves the spec.
 3. **Spike** (20, `spike`, only when a technical unknown can change the spec). Spawn with [briefs/spike.md](briefs/spike.md). One agent edits the working tree at a time. Done when: the answer is in the spec.
-4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Back to this phase if they do not pass. Done when: the captain approves the tests.
+4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Give the command to see them: `! git -C <worktree> diff`. The captain's session may not be in the repo, so `/diff` can fail. Back to this phase if they do not pass. Done when: the captain approves the tests.
 5. **Green or Move** (50). Spawn with [briefs/green.md](briefs/green.md). It may not edit tests. Done when: you checked its diff and its specs pass.
 6. **Review** (60, `review-standards` and `review-spec` run in parallel). When they start, set the task state `reviewing`. Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Done when: each finding is fixed or rejected in writing.
 7. **Prove** (80, `browser`). Run `/prove` once. Then spawn the browser agent with [briefs/browser.md](briefs/browser.md). Add missing mocks. Done when: `/prove` shows `pass` for every check and each UI is `ok` or `problem`.
@@ -57,7 +57,7 @@ Next MR of the same ticket: start phase 4 for it while the last MR waits for rev
 - **E2E runs:** [e2e.md](e2e.md). Red, Pin, Green and Move follow it.
 - **Every agent:** [briefs/common.md](briefs/common.md).
 
-Before each agent starts, tell the captain the expected time. These are estimates from one earlier run: Red or Pin plus Green or Move about 50 min when one agent does both, each review about 1 min, fixer about 20 min, browser about 6 min. Write the estimate in the phase of the status file, for example "building, about 50 min". When the captain asks, show the newest line of each file. Do not say "still working".
+Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Write the estimate in the phase of the status file, for example "building, about 12 min". When the captain asks, show the newest line of each file. Do not say "still working".
 
 ## Tokens
 
