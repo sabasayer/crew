@@ -1,5 +1,5 @@
 import type { Agent } from '../types'
-import { isStale } from './board'
+import { isStale } from './board.ts'
 
 export type Run = { t: string; fg?: string; bg?: string }
 type Grid = (string | null)[][]

@@ -59,6 +59,32 @@ The crew skill has a file `e2e.md`. It lists what every e2e run must do. Agents 
 If you also use [mr-triage](https://github.com/sabasayer/mr-triage) and its `track-work` skill, the first mate adds a task for each branch.
 It moves the task to `reviewing` and `local_testing`, and adds the MR link. It skips this when mr-triage is not running.
 
+## Web view (browser or phone)
+
+`/crew-board serve` starts a small web server and prints the links:
+
+```
+crew-board http://192.168.1.20:7777/?t=Xk3...
+```
+
+Open one on any device in the same network. The page shows the same board: ship, agents, bars, stale and blocked states. It polls every 2 seconds and moves the ship while an agent runs.
+
+- The link has a random token. Without it the server answers 403. It is made fresh at each start.
+- `/crew-board serve local` listens on this computer only. `/crew-board serve stop` stops it. It also stops when the session ends.
+- Change the port with the `port` option. The default is 7777.
+- It shows the same folders as the pane: the board folder, and old runs in `/tmp/crew`.
+- It needs Node 22.18 or newer. You can also run it alone: `node mods/board/serve/serve.mjs --port 7777 [--local-only] [--root ~/.crew] [--token abc]`.
+- Add `&ticket=<name>` to show one ticket, or `&style=simple` for the simple ship.
+- Anyone on your network with the link can see ticket names and phases. It is plain HTTP. To reach it away from home, use a VPN such as Tailscale and open the Tailscale address (it is in the printed list). Do not open the port to the internet.
+
+## Alerts
+
+When an agent becomes `blocked` (a gate waits for the captain), `failed`, or stale, the mod sends a notification through your Claude Code notification channel. Each change is sent once. Start-up state is not sent. Turn it off with the option `alerts` set to `off`.
+
+## Mobile app
+
+The Claude mobile app does not dock panes, so the pane does not show there. The mod draws a short summary above the prompt instead: the newest ticket, the done count, and the agents that are running, blocked or failed. This follows the mod API for the `mobile` surface. It has not been tried in the app yet.
+
 ## Style (option)
 
 The option `style` is `full` or `simple`. The default is `full`.
@@ -112,28 +138,6 @@ Without `order`, it sorts by the usual flow:
 `gate-spec, spec, spike, red, pin, gate-tests, green, move, review-*, fixer, browser, gate-captain`.
 Unknown roles go last.
 
-## Changes to suggest for `crew/SKILL.md`
-
-The first mate should make these changes. This repo does not edit the skill.
-
-0. **Open the board for this ticket.** In phase 1, after the ticket name is known,
-   call `mcp__crew-board__crew_board_open` with `ticket` set to the folder name under `~/.crew`.
-   Skip it if the tool is not there.
-
-1. **Write the whole chain at the start.** Before phase 2, write one file per planned
-   agent with `state: queued` and an `order` number. Then the board shows what comes next.
-2. **Write the gates as files.** A gate is a role that starts with `gate-`.
-   While it waits for the captain, set `state: blocked` and `phase` to what the
-   captain must do. When the captain says yes, set `state: done`.
-   - `gate-spec` — spec approved (phase 2)
-   - `gate-tests` — captain reads the tests (phase 3)
-   - `gate-captain` — captain test (phase 7)
-3. **Say who writes the file.** An agent writes its own file at each phase.
-   The first mate writes the gate files and the `queued` files.
-4. **Write `updated` on every tool burst**, not only at a phase change.
-   Else a long phase looks stale after 15 minutes.
-5. **Write atomically.** Write to `<role>.json.tmp`, then rename. The board then never reads half a file.
-
 ## Develop
 
 ```sh
@@ -142,7 +146,7 @@ claude plugin test mods/board
 ```
 
 The tests cover the logic in `mods/board/hooks/board.ts` and `ship.ts`: stale check, chain order,
-bad JSON, bar and age, ship shape, hats and faces. The pane drawing is not tested by a script. Check it by eye with demo files:
+bad JSON, bar and age, alerts, ship shape, hats and faces. The web server is not tested by a script; start it with demo files and open it. The pane drawing is not tested by a script. Check it by eye with demo files:
 
 ```sh
 mkdir -p ~/.crew/demo && echo '{"role":"red","state":"running","phase":"demo","done":3,"total":10,"updated":"'$(date -u +%FT%TZ)'"}' > ~/.crew/demo/red.json
@@ -150,6 +154,6 @@ mkdir -p ~/.crew/demo && echo '{"role":"red","state":"running","phase":"demo","d
 
 ## Move this mod
 
-The mod is one folder: `mods/board`. It does not use mr-triage or any server.
+The mod is one folder: `mods/board`, with its hooks and its skills. It does not use mr-triage or any server.
 To merge it with other mods, copy that folder and add a line to the other repo's
 `.claude-plugin/marketplace.json`.

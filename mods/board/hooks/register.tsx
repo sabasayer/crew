@@ -2,8 +2,8 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
-import { LEGACY_ROOT, age, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board'
-import { drawShip, halfBlocks, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship'
+import { LEGACY_ROOT, age, alerts, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
+import { drawShip, halfBlocks, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship.ts'
 
 const PANE = 'crew-board'
 const POLL_MS = 2_000
@@ -50,7 +50,50 @@ async function scan($: EngineInterface, root: string): Promise<Board> {
   return { tickets: [...main, ...legacy].sort((a, b) => b.newestMs - a.newestMs), now }
 }
 
-const refresh = ($: EngineInterface, root: string) => scan($, root).then(next => update($, board, () => next))
+let seen: Board | null = null
+let isAlerting = true
+type Web = { stream: ReturnType<EngineInterface['process']['spawn']>; urls: string[] }
+let web: Web | null = null
+
+const refresh = async ($: EngineInterface, root: string) => {
+  const next = await scan($, root)
+  if (isAlerting) for (const a of alerts(seen, next)) void $.ui.notify(a.text, { title: 'Crew board' }).catch(() => {})
+  seen = next
+  await update($, board, () => next)
+}
+
+const serve = async ($: EngineInterface, args: string, root: string, port: string) => {
+  const [action = ''] = args.toLowerCase().split(/\s+/)
+  if (action === 'stop') {
+    if (!web) return 'The web view is not running.'
+    await web.stream.return(undefined as never)
+    web = null
+
+    return 'Web view stopped.'
+  }
+  if (web) return `The web view is running:\n${web.urls.join('\n')}`
+  if (action && action !== 'local') return 'Use "serve", "serve local" or "serve stop".'
+  const argv = ['node', `${$.plugin.root}/serve/serve.mjs`, '--root', root, '--port', port, ...(action === 'local' ? ['--local-only'] : [])]
+  const stream = $.process.spawn({ argv })
+
+  return new Promise<string>(resolve => {
+    void (async () => {
+      let output = ''
+      try {
+        for await (const chunk of stream) {
+          output += chunk.text
+          if (!web && chunk.stream === 'stdout') {
+            const urls = output.split('\n').filter(l => l.startsWith('crew-board ')).map(l => l.slice(11))
+            web = { stream, urls }
+            resolve(`Web view started. Open one of these on a device in the same network:\n${urls.join('\n')}\nStop it with /crew-board serve stop.`)
+          }
+        }
+      } catch {}
+      web = null
+      resolve(`The web view did not start. ${output.trim() || 'Needs Node 22.18 or newer.'}`)
+    })()
+  })
+}
 
 const cleanRuns = async ($: EngineInterface, root: string, isConfirmed: boolean) => {
   await refresh($, root)
@@ -79,14 +122,16 @@ const show = async ($: EngineInterface, ticket: string) => {
 export const register: Register = (on, options) => {
   const configured = String(options?.style ?? 'full')
   const rootOption = options?.root
+  const port = String(options?.port ?? '7777')
+  isAlerting = String(options?.alerts ?? 'on') !== 'off'
 
   on('session.start', async ($, e, next) => {
     const root = await getRoot($, rootOption)
     await $.process.run(['mkdir', '-p', root]).catch(() => undefined)
     await $.command.register({
       name: 'crew-board',
-      description: 'Show the live board of /crew agents. Add a ticket name to show only that ticket. Use "style" to switch between full and simple, or "style full" or "style simple" to pick one. Use "clean" to list runs older than 30 days',
-      argumentHint: '[ticket | style [full|simple] | clean [yes]]',
+      description: 'Show the live board of /crew agents. Add a ticket name to show only that ticket. Use "style" to switch between full and simple, or "style full" or "style simple" to pick one. Use "serve" to start a web view for a browser or phone, "serve local" for this computer only, "serve stop" to stop it. Use "clean" to list runs older than 30 days',
+      argumentHint: '[ticket | style [full|simple] | serve [local|stop] | clean [yes]]',
     })
     await $.tool.register({
       name: TOOL,
@@ -125,6 +170,8 @@ export const register: Register = (on, options) => {
 
       return cleanRuns($, await getRoot($, rootOption), asked === 'yes')
     }
+    const serveArgs = e.args.trim().match(/^serve(?:\s+(.*))?$/i)
+    if (serveArgs) return { text: await serve($, serveArgs[1] ?? '', await getRoot($, rootOption), port) }
     const ticket = e.args.trim()
     await show($, ticket)
 
@@ -136,6 +183,28 @@ export const register: Register = (on, options) => {
     await show($, ticket)
 
     return { result: ticket ? `Crew board opened for ${ticket}.` : 'Crew board opened.' }
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (e.surface !== 'mobile') return next(e)
+    const { tickets, now } = await read($, board)
+    const t = tickets[0]
+    if (!t) return next(e)
+    const { Box, Text } = $.ui.resolve(e)
+    const open = t.agents.filter(a => a.state !== 'done' && a.state !== 'queued').slice(0, 4)
+
+    return (
+      <Box flexDirection="column">
+        <Text bold>
+          Crew {t.name}: {t.agents.filter(a => a.state === 'done').length}/{t.agents.length} done
+        </Text>
+        {open.map(a => (
+          <Text color={isStale(a, now) ? 'red' : (LOOK[a.state] ?? UNKNOWN).color} wrap="truncate-end">
+            {(LOOK[a.state] ?? UNKNOWN).icon} {a.role} {a.state} {(a.state === 'failed' ? a.summary : undefined) || a.phase || ''}
+          </Text>
+        ))}
+      </Box>
+    )
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {

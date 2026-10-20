@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { age, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board'
+import { age, alerts, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
 
 const at = (role: string, extra = {}) =>
   parseAgent(`${role}.json`, JSON.stringify({ role, state: 'running', updated: '2026-10-16T14:00:00Z', ...extra }), 0)
@@ -45,4 +45,15 @@ test('old runs are those silent for over 30 days', () => {
   const day = 24 * 3600_000
   const t = (name: string, ageDays: number) => ({ name, agents: [], newestMs: 100 * day - ageDays * day })
   expect(oldRuns([t('a', 29), t('b', 31)], 100 * day).map(x => x.name)).toEqual(['b'])
+})
+
+test('alerts fire once when an agent becomes blocked, failed or stale', () => {
+  const board = (agents: ReturnType<typeof at>[], now = 0) => ({ tickets: [{ name: 't', agents, newestMs: 0 }], now })
+  const old = board([at('gate-spec', { state: 'queued' }), at('red'), at('green', { state: 'queued' })], 1)
+  const next = board([at('gate-spec', { state: 'blocked', phase: 'approve the spec' }), at('red'), at('green', { state: 'failed', summary: 'tests red' })], 1)
+  expect(alerts(null, next)).toEqual([])
+  expect(alerts(old, next).map(a => a.text)).toEqual(['t: gate-spec waits for you - approve the spec', 't: green failed - tests red'])
+  expect(alerts(next, next)).toEqual([])
+  const late = { ...next, now: at('red').updatedMs + 16 * 60_000 }
+  expect(alerts(next, late).map(a => a.kind)).toEqual(['stale'])
 })
