@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { age, alerts, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
+import { age, alerts, bar, inFocus, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
 
 const at = (role: string, extra = {}) =>
   parseAgent(`${role}.json`, JSON.stringify({ role, state: 'running', updated: '2026-10-16T14:00:00Z', ...extra }), 0)
@@ -56,4 +56,12 @@ test('alerts fire once when an agent becomes blocked, failed or stale', () => {
   expect(alerts(next, next)).toEqual([])
   const late = { ...next, now: at('red').updatedMs + 16 * 60_000 }
   expect(alerts(next, late).map(a => a.kind)).toEqual(['stale'])
+})
+
+test('a ticket name shows all its MR run folders', () => {
+  expect(inFocus('ENG-2876-mr1', 'eng-2876')).toBe(true)
+  expect(inFocus('eng-2876-mr2', 'eng-2876')).toBe(true)
+  expect(inFocus('eng-2876', 'eng-2876')).toBe(true)
+  expect(inFocus('eng-28760-mr1', 'eng-2876')).toBe(false)
+  expect(inFocus('eng-2876-mr1', 'eng-2876-mr2')).toBe(false)
 })

@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
-import { LEGACY_ROOT, age, alerts, bar, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
+import { LEGACY_ROOT, age, alerts, bar, inFocus, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
 import { drawShip, halfBlocks, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship.ts'
 
 const PANE = 'crew-board'
@@ -215,7 +215,7 @@ export const register: Register = (on, options) => {
     const useSvg = e.surface !== 'terminal' && 'Svg' in ui
     const all = await read($, board)
     const only = (await read($, focus)).toLowerCase()
-    const tickets = only ? all.tickets.filter(t => t.name.toLowerCase() === only) : all.tickets
+    const tickets = only ? all.tickets.filter(t => inFocus(t.name, only)) : all.tickets
     const now = all.now
     const step = await read($, frame)
     const tick = Math.floor(now / POLL_MS)
