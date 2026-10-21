@@ -53,11 +53,11 @@ Next MR of the same ticket: start phase 4 for it while the last MR waits for rev
 
 ## Files for agents
 
-- **Status files:** [status.md](status.md). The crew board shows them. Every agent follows it.
+- **Status files:** [status.md](status.md). The crew board shows them. Every agent writes them with `crew-status`. Put the run folder, the role name and the order in each spawn text.
 - **E2E runs:** [e2e.md](e2e.md). Red, Pin, Green and Move follow it.
 - **Every agent:** [briefs/common.md](briefs/common.md).
 
-Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Write the estimate in the phase of the status file, for example "building, about 12 min". When the captain asks, show the newest line of each file. Do not say "still working".
+Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Put the estimate in the phase of the status, for example `--phase "building, about 12 min"`. When the captain asks, show the newest line of each file. Do not say "still working".
 
 ## Tokens
 

@@ -56,6 +56,11 @@ The plugin ships a second skill: `/crew-board:prove`. It runs the checks CI runs
 
 The crew skill has a file `e2e.md`. It lists what every e2e run must do. Agents then find the repo's own e2e scripts that do it.
 
+The plugin has a `bin` folder with two commands. Claude Code puts it on the PATH of the Bash tool when the plugin is on. A session loads it at the start.
+
+- `crew-status <role> <state> "<summary>" --run <run folder> [--order N]` writes a status file. It refuses an empty summary for `blocked`, `done` and `failed`.
+- `crew-visual-diff <test-results folder>` prints the changed pixels and the changed area of each Playwright `*-actual.png` and `*-expected.png` pair. Agents read this text and do not open the images.
+
 If you also use [mr-triage](https://github.com/sabasayer/mr-triage) and its `track-work` skill, the first mate adds a task for each branch.
 It moves the task to `reviewing` and `local_testing`, and adds the MR link. It skips this when mr-triage is not running.
 
@@ -117,7 +122,7 @@ The older option `characters` is gone. It is ignored if it is still in your sett
 
 ## Status file contract
 
-One file per agent: `~/.crew/<ticket>/<role>.json`.
+One file per agent: `~/.crew/<ticket>/<role>.json`. Agents write it with `crew-status`.
 
 ```json
 {"role":"red","state":"running","phase":"writing e2e tests","done":12,"total":35,"order":2,"updated":"2026-10-16T14:40:00Z"}

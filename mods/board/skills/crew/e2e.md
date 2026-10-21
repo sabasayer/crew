@@ -28,4 +28,4 @@ Every e2e run must do these things. This holds in any repo.
 4. Use the best script. Do each missing part by hand. For example: move `.env` out yourself, run all specs in one call with the output in a log file, and use one blocking call with a timeout.
 5. If the repo has no script, run the repo's own e2e command once in one blocking call. Send the output to a log file, then read the log.
 
-Before a long call, write the phase in your status file ([status.md](status.md), "Long call"). Write it again after.
+Before a long call, set the phase with `crew-status` ([status.md](status.md), "Long call"). Write it again after.
