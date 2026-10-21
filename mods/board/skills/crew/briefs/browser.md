@@ -5,7 +5,7 @@ Start the dev server and use a browser tool (for example the Chrome DevTools too
 - Check the look, close by X, Escape, backdrop, and the console.
 - List each UI you could not reach and what mock it needs.
 - Budget: about 60 calls. Use `take_snapshot` (text) in place of screenshots when you can.
-- Save one screenshot for each UI as proof, and one more for each problem. Read an image only for a problem.
+- Save one screenshot for each UI as proof, and one more for each problem. You are the only agent that opens an image. Open one only for a problem.
 - Stop every server you started.
 - Follow [common.md](common.md).
 

@@ -44,7 +44,7 @@ Order numbers for the status files are in brackets. Each phase ends on its "Done
 3. **Spike** (20, `spike`, only when a technical unknown can change the spec). Spawn with [briefs/spike.md](briefs/spike.md). One agent edits the working tree at a time. Done when: the answer is in the spec.
 4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Give the command to see them: `! git -C <worktree> diff`. The captain's session may not be in the repo, so `/diff` can fail. Back to this phase if they do not pass. Done when: the captain approves the tests.
 5. **Green or Move** (50). Spawn with [briefs/green.md](briefs/green.md). It may not edit tests. Done when: you checked its diff and its specs pass.
-6. **Review** (60, `review-standards` and `review-spec` run in parallel). When they start, set the task state `reviewing`. Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Done when: each finding is fixed or rejected in writing.
+6. **Review** (60, `review-standards` and `review-spec` run in parallel). When they start, set the task state `reviewing`. Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Spawn it with [briefs/fixer.md](briefs/fixer.md). Done when: each finding is fixed or rejected in writing.
 7. **Prove** (80, `browser`). Run `/prove` once. Then spawn the browser agent with [briefs/browser.md](briefs/browser.md). Add missing mocks. Done when: `/prove` shows `pass` for every check and each UI is `ok` or `problem`.
 8. **Captain test** (90, `gate-captain`). Give the captain the dev server URL with the port from the spec folder, and the steps. When the captain says they tested it on the dev server, set the task state `local_testing`. Do not set it on your own guess. Done when: the captain says okay.
 9. **Ship.** Use the project's ship flow. When the MR is open, update the task with `mr_url`. Stage files by name. Never run `git add docs/` or `git add -A`. Commit only when each commit is green alone, or else squash. Ask who reviews. Do not assign anyone yourself. Done when: the pipeline is green and the MR link is in the task.
@@ -53,11 +53,11 @@ Next MR of the same ticket: start phase 4 for it while the last MR waits for rev
 
 ## Files for agents
 
-- **Status files:** [status.md](status.md). The crew board shows them. Every agent follows it.
+- **Status files:** [status.md](status.md). The crew board shows them. Every agent writes them with `crew-status`. Put the run folder, the role name and the order in each spawn text.
 - **E2E runs:** [e2e.md](e2e.md). Red, Pin, Green and Move follow it.
 - **Every agent:** [briefs/common.md](briefs/common.md).
 
-Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Write the estimate in the phase of the status file, for example "building, about 12 min". When the captain asks, show the newest line of each file. Do not say "still working".
+Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Put the estimate in the phase of the status, for example `--phase "building, about 12 min"`. When the captain asks, show the newest line of each file. Do not say "still working".
 
 ## Tokens
 
@@ -66,6 +66,7 @@ Before each agent starts, tell the captain the expected time. Work out the estim
 
 ## Rules
 
+- Never open an image yourself. Read the text from `crew-visual-diff` ([e2e.md](e2e.md)).
 - Never write crew files, scripts or reports into the project repo. Put them in the run folder or the spec folder.
 - Never create, move or delete tags.
 - Never deploy.

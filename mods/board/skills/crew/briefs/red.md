@@ -8,7 +8,8 @@ Read first: the spec at `<spec path>`.
 - Select by role, `data-testid` or visible text. Never by library class.
 - Check what tests exist. Write only the missing ones.
 - E2E covers journeys and stacking. Component tests cover props, events and states. Never test one thing at both levels.
-- Run only the specs of this change. Follow [e2e.md](../e2e.md). Run Docker once, at the end of your phase. You create or check baselines.
+- E2E budget: run only the changed specs while you work. Run the repeat or flake check once, at the end. Make at most 8 e2e calls. After that, report and ask the captain. Never use `tail -f`, `sleep` or a poll loop: make one blocking call. Details in [e2e.md](../e2e.md).
+- Run Docker once, at the end of your phase. You create or check baselines.
 - Follow [common.md](common.md).
 
 ## Pin mode (migration)
