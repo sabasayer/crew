@@ -2,7 +2,7 @@
 
 Every e2e run must do these things. This holds in any repo.
 
-- Run the specs of this change in one blocking call. The call waits by itself. Never write a sleep or poll loop.
+- Run the specs of this change in one blocking call. The call waits by itself.
 - Print one pass or fail result for each spec. For each failure, print the log path and the last lines. Write the log to `logs/` in the run folder.
 - Decide the rebuild by itself. Rebuild once when an input of the build changed. Otherwise reuse the last build. The agent never chooses.
 - Run visual specs by check 3 of the `prove` skill: CI image, `.env` kept safe, baselines checked only.
@@ -12,6 +12,13 @@ Every e2e run must do these things. This holds in any repo.
 - Run Docker once. Green and Move run it after the last source change. Red and Pin run it at the end of their phase.
 - Read the Playwright text output. It gives the diff pixel count. Open an image only for a problem.
 - Use the repo's own scripts. Write no new wrapper scripts.
+
+## Budget
+
+- While you work, run only the specs you changed. Never run the whole suite.
+- Run the repeat or flake check once, at the end, on the changed specs.
+- Make at most 8 e2e calls in your run. One run of the e2e script is one call, with or without Docker. After the 8th call, stop. Report what you have and ask the captain.
+- Never use `tail -f`, `sleep`, a poll loop or a monitor to wait for a run. Make one blocking call. If it times out, read the log once with `tail -n 40 <log>`, then report. Do not run it again.
 
 ## Find the repo's scripts
 
