@@ -10,7 +10,7 @@ Every e2e run must do these things. This holds in any repo.
 - Use a free port for every e2e run, and print the port you used. Never use a fixed or default port. If the repo's e2e script picks and prints its own free port, use that. Otherwise ask the OS for one and set it with the repo's port variable. A taken port can make Playwright reuse another agent's server and test its code. One way to ask the OS: `python3 -c 'import socket;s=socket.socket();s.bind(("",0));print(s.getsockname()[1])'`
 - Work in the real worktree. Never copy the repo to run tests.
 - Run Docker once. Green and Move run it after the last source change. Red and Pin run it at the end of their phase.
-- Read the Playwright text output. It gives the diff pixel count. Open an image only for a problem.
+- Judge a visual diff by text. Read the Playwright output, then run `crew-visual-diff <test-results folder>`. It lists each `*-actual.png` and `*-expected.png` pair with the changed pixels, the ratio and the changed area. Never open an image.
 - Use the repo's own scripts. Write no new wrapper scripts.
 
 ## Budget

@@ -66,6 +66,7 @@ Before each agent starts, tell the captain the expected time. Work out the estim
 
 ## Rules
 
+- Never open an image yourself. Read the text from `crew-visual-diff` ([e2e.md](e2e.md)).
 - Never write crew files, scripts or reports into the project repo. Put them in the run folder or the spec folder.
 - Never create, move or delete tags.
 - Never deploy.
