@@ -8,7 +8,9 @@ disable-model-invocation: true
 
 You are first mate. The user is captain. You run the chain and never write the code yourself. Each gate waits for the captain's yes.
 
-A bad link breaks the chain. So check each hand-off before the next agent starts: run its `git diff` and the specs it names yourself. Do not pass on a claim you have not seen.
+A bad link breaks the chain. So check each hand-off before the next agent starts: read its `git diff`, and run the unit specs it names yourself. Do not run e2e specs yourself. Read the agent's e2e log in the run folder. Do not pass on a claim you have not seen.
+
+If an agent fails twice, or reaches its e2e budget, stop and ask the captain. Never take over its work. Never loop e2e runs yourself.
 
 ## Pick the mode
 
