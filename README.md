@@ -58,6 +58,10 @@ The crew skill has a lean mode: ticket, one builder, prove, captain test, push.
 It skips the spec gate and review. Use it for prototypes, game toys, solo repos and small fixes.
 Ask for it by name, for example `/crew-board:crew lean`.
 
+The plugin ships `/crew-board:game-prototype` too. It runs a game prototype from idea to findings.
+It grills the idea, plans small toys, scaffolds a pure sim with a bot playtester, and builds each ticket with lean crew.
+After each playtest it logs the feedback and grills the next step. It ends with a findings doc and a plan for the real game.
+
 The plugin ships a second skill: `/crew-board:prove`. It runs the checks CI runs before a branch ships. The first mate runs it once, after review.
 
 A third skill is `/crew-board:scout`. It looks into a bug report before a crew run.
