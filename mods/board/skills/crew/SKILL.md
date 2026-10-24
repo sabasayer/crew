@@ -19,6 +19,10 @@ If an agent fails twice, or reaches its e2e budget, stop and ask the captain. Ne
 
 Both modes end the same way: Review, Prove, Captain test, Ship.
 
+- **Lean:** Ticket, Build, Prove, Captain test, Ship. One builder, no spec gate, no review. See [Lean mode](#lean-mode).
+
+Pick lean only when the captain asks for it, or the project docs say so. It fits prototypes, game toys, solo repos and small fixes. It does not fit code that a team reviews.
+
 ## Project commands
 
 Find these in `AGENTS.md`, `CLAUDE.md`, `README.md` or `package.json`. Ask the captain when you cannot find one.
@@ -53,11 +57,34 @@ Order numbers for the status files are in brackets. Each phase ends on its "Done
 
 Next MR of the same ticket: start phase 4 for it while the last MR waits for review. Use a new run folder.
 
+## Lean mode
+
+The captain plays or tests after every ticket. Speed matters more than review. A lean run is one ticket. Many lean runs in a row make a project.
+
+Phases, with orders:
+
+1. **Fetch** (before the chain). Read the repo's `AGENTS.md` or `CLAUDE.md`. Check the tree is clean. Work in the main checkout on the default branch, unless the project docs say to branch. Keep one dev server running for the whole project. Reuse it between runs. Done when: the tree is clean and the server answers HTTP 200.
+2. **Ticket** (no gate). Write the ticket from the captain's grilling round. Sections: Goal, Scope, Acceptance. Put it where the project keeps tickets, else in the spec folder. Done when: every decision in the ticket came from the captain or the project docs.
+3. **Build** (10, `build`). Spawn one agent in the background with [briefs/build.md](briefs/build.md). It writes the tests and the code, and commits. It does not push. Done when: it reports and its commit is on the branch.
+4. **Prove** (20, `prove`). Run the project's checks yourself, all of them. Check the tree is clean. Read the agent's diff summary. If the project has a bot playtest or another report script, run it and read it. Done when: every check passes and you pushed.
+5. **Captain test** (30, `gate-captain`). Give the captain the dev server URL, what changed, and what to watch for. Add numbers from the report, if there is one. Done when: the captain gives feedback or says okay.
+6. **Ship.** Push right after Prove. If the project uses merge requests, use its ship flow instead.
+
+After the captain test:
+
+- Write the captain's feedback and decisions where the project logs them, for example `docs/playtests.md`. Commit and push.
+- Grill the next change in rounds. Number the questions and give a recommended answer for each.
+- Bug report from the captain: read the code first. Report what you found before you write a ticket.
+- One run folder per ticket: `<project>-<ticket>`.
+
+Estimates for lean builds come from this ticket's size, as for any run.
+
 ## Files for agents
 
 - **Status files:** [status.md](status.md). The crew board shows them. Every agent writes them with `crew-status`. Put the run folder, the role name and the order in each spawn text.
 - **E2E runs:** [e2e.md](e2e.md). Red, Pin, Green and Move follow it.
 - **Every agent:** [briefs/common.md](briefs/common.md).
+- **Lean builder:** [briefs/build.md](briefs/build.md).
 
 Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Put the estimate in the phase of the status, for example `--phase "building, about 12 min"`. When the captain asks, show the newest line of each file. Do not say "still working".
 

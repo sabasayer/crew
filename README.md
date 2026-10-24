@@ -52,6 +52,10 @@ It runs a ticket through spec, tests, code, review and ship, with gates for you.
 It writes the status files that the board shows. It reads your project docs for the dev server, the checks and the ship flow.
 The skill and its briefs are in `mods/board/skills/crew/`.
 
+The crew skill has a lean mode: ticket, one builder, prove, captain test, push.
+It skips the spec gate and review. Use it for prototypes, game toys, solo repos and small fixes.
+Ask for it by name, for example `/crew-board:crew lean`.
+
 The plugin ships a second skill: `/crew-board:prove`. It runs the checks CI runs before a branch ships. The first mate runs it once, after review.
 
 The crew skill has a file `e2e.md`. It lists what every e2e run must do. Agents then find the repo's own e2e scripts that do it.
