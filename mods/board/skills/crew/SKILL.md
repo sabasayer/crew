@@ -58,11 +58,21 @@ Next MR of the same ticket: start phase 4 for it while the last MR waits for rev
 
 ## Files for agents
 
-- **Status files:** [status.md](status.md). The crew board shows them. Every agent writes them with `crew-status`. Put the run folder, the role name and the order in each spawn text.
+- **Status files:** [status.md](status.md). The crew board shows them. Every agent writes them with `crew-status`. Put the run folder, the role name and the order in each spawn text. Tell each agent to add `crew-status` to the end of its next real command and never make a call only for status. You do the same: your own status calls ride on real commands.
 - **E2E runs:** [e2e.md](e2e.md). Red, Pin, Green and Move follow it.
 - **Every agent:** [briefs/common.md](briefs/common.md).
 
 Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Put the estimate in the phase of the status, for example `--phase "building, about 12 min"`. When the captain asks, show the newest line of each file. Do not say "still working".
+
+## Handoff
+
+A long idle makes the next turn re-write the whole context. So no agent waits.
+
+- Before a gate or any wait over 1 hour, the agent writes `~/.crew/<ticket>/handoff-<role>.md` and ends. `/keepwarm` covers 6 hours only. Do not use it for an agent.
+- After the gate, start a fresh agent. Never resume an old agent with `SendMessage`.
+- The spawn text names the brief, the spec path and the handoff note path. Add the captain's answer.
+- An agent that reaches its context limit ([briefs/green.md](briefs/green.md)) does the same. Start a fresh one.
+- For a large migration, the spec lists the files. Split them into groups. Start one agent for each group, one at a time.
 
 ## Tokens
 
