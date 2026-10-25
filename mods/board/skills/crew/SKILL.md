@@ -76,7 +76,7 @@ A long idle makes the next turn re-write the whole context. So no agent waits.
 
 ## Tokens
 
-- Give each agent its brief, `briefs/common.md`, and the files its brief names. Add the spec path and the files to read. Add no chat history.
+- Give each agent its brief, `briefs/common.md`, and the files its brief names. Add the spec path and the files to read. Add no chat history. Check that the cap is in the first line of the brief you pass. Put the cap number in the spawn text too.
 - Review agents read the diff only.
 
 ## Rules
