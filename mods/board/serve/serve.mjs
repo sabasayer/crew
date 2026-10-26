@@ -6,7 +6,7 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { networkInterfaces } from 'node:os'
 
-import { age, isStale, parseAgent, sortChain } from '../hooks/board.ts'
+import { age, isStale, isStatusFile, parseAgent, sortChain } from '../hooks/board.ts'
 import { drawShip, hatSvg, shipSvg } from '../hooks/ship.ts'
 
 const args = process.argv.slice(2)
@@ -35,7 +35,7 @@ async function scanRoot(root) {
       .filter(f => f.isDirectory())
       .map(async folder => {
         const dir = `${root}/${folder.name}`
-        const names = (await readdir(dir).catch(() => [])).filter(n => n.endsWith('.json'))
+        const names = (await readdir(dir).catch(() => [])).filter(isStatusFile)
         const agents = await Promise.all(
           names.map(async n =>
             parseAgent(n, await readFile(`${dir}/${n}`, 'utf8').catch(() => '{'), await stat(`${dir}/${n}`).then(s => s.mtimeMs, () => 0)),

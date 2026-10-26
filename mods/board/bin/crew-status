@@ -72,4 +72,20 @@ with os.fdopen(fd, "w") as f:
     f.write("\n")
 os.chmod(tmp, 0o644)
 os.replace(tmp, path)
+
+session = os.environ.get("CLAUDE_CODE_SESSION_ID")
+ship_path = os.path.join(os.path.dirname(os.path.abspath(run)), re.sub(r"-mr\d+$", "", os.path.basename(os.path.abspath(run))), "ship.json")
+if session and not os.environ.get("CLAUDE_CODE_CHILD_SESSION") and os.path.exists(ship_path):
+    try:
+        with open(ship_path) as f:
+            ship = json.load(f)
+        ship["session"] = {"id": session, "updated": data["updated"]}
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(ship_path), prefix="ship.json.", suffix=".tmp")
+        with os.fdopen(fd, "w") as f:
+            json.dump(ship, f, indent=2)
+            f.write("\n")
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, ship_path)
+    except (OSError, ValueError):
+        pass
 print(f"{a.role}: {a.state}" + (f" - {summary}" if summary else ""))

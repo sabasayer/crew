@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Agent, Board, Ticket } from '../types'
-import { LEGACY_ROOT, age, alerts, bar, inFocus, isStale, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
+import { LEGACY_ROOT, age, alerts, bar, inFocus, isStale, isStatusFile, oldRuns, parseAgent, resolveRoot, sortChain } from './board.ts'
 import { drawShip, halfBlocks, hatSvg, miniHatGrid, shipSvg, shipWidth, water } from './ship.ts'
 
 const PANE = 'crew-board'
@@ -30,7 +30,7 @@ async function scanRoot($: EngineInterface, root: string): Promise<Ticket[]> {
   const tickets = await Promise.all(
     folders.map(async (folder): Promise<Ticket> => {
       const dir = `${root}/${folder.name}`
-      const files = (await $.fs.list(dir).catch(() => [])).filter(f => f.name.endsWith('.json'))
+      const files = (await $.fs.list(dir).catch(() => [])).filter(f => isStatusFile(f.name))
       const agents = await Promise.all(
         files.map(async f => parseAgent(f.name, await $.fs.read(`${dir}/${f.name}`).catch(() => '{'), f.mtimeMs)),
       )
