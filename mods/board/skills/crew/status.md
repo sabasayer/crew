@@ -25,3 +25,15 @@ crew-status --run <run folder> <role> <state> "<summary>" [--order N] [--phase "
 - **Name.** The role name is the file name without `.json`.
 - **Long call.** Before a call of about 10 minutes (Docker, e2e), set the phase, for example `--phase "docker run, about 10 min"`. Add "about X min" only when you know the time. Set it again after the call. A `running` file with no update for 15 minutes shows as stale.
 - **End.** Finish with `done` or `failed` and a summary.
+
+## Ship file
+
+`crew-ship` writes `~/.crew/<ticket>/ship.json`, which fleet reads. It is not a status file, and the board skips it. Every `crew-status` call from the first mate refreshes its `session` from `CLAUDE_CODE_SESSION_ID`. Agents in a sub-agent session skip this.
+
+```
+crew-ship create <ticket> --title T --fleet F [--task LINK] --repo P --remote HOST/PATH --worktree W --branch B
+crew-ship add-mr <ticket> --repo P --remote HOST/PATH --worktree W --branch B
+crew-ship url <ticket> <N> <MR link>
+```
+
+The command refuses empty or badly formed values. It uses `CREW_BOARD_ROOT` in place of `~/.crew` when set.

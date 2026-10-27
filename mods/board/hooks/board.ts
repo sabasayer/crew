@@ -21,6 +21,8 @@ export function sortChain(agents: Agent[]) {
   )
 }
 
+export const isStatusFile = (name: string) => name.endsWith('.json') && name !== 'ship.json'
+
 export function parseAgent(file: string, text: string, mtimeMs: number): Agent {
   const fallback = file.replace(/\.json$/, '')
   try {

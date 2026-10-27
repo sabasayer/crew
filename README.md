@@ -56,9 +56,10 @@ The plugin ships a second skill: `/crew-board:prove`. It runs the checks CI runs
 
 The crew skill has a file `e2e.md`. It lists what every e2e run must do. Agents then find the repo's own e2e scripts that do it.
 
-The plugin has a `bin` folder with two commands. Claude Code puts it on the PATH of the Bash tool when the plugin is on. A session loads it at the start.
+The plugin has a `bin` folder with three commands. Claude Code puts it on the PATH of the Bash tool when the plugin is on. A session loads it at the start.
 
 - `crew-status <role> <state> "<summary>" --run <run folder> [--order N]` writes a status file. It refuses an empty summary for `blocked`, `done` and `failed`.
+- `crew-ship` writes the ship file `~/.crew/<ticket>/ship.json` (fleet, title, task link, session, MRs). The board skips it. See `skills/crew/status.md`.
 - `crew-visual-diff <test-results folder>` prints the changed pixels and the changed area of each Playwright `*-actual.png` and `*-expected.png` pair. Agents read this text and do not open the images.
 
 If you also use [mr-triage](https://github.com/sabasayer/mr-triage) and its `track-work` skill, the first mate adds a task for each branch.
@@ -148,6 +149,7 @@ Unknown roles go last.
 ```sh
 claude plugin validate mods/board
 claude plugin test mods/board
+python3 mods/board/test/crew_ship_test.py
 ```
 
 The tests cover the logic in `mods/board/hooks/board.ts` and `ship.ts`: stale check, chain order,
