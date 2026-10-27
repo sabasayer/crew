@@ -17,7 +17,7 @@ Every e2e run must do these things. This holds in any repo.
 
 - While you work, run only the specs you changed. Never run the whole suite.
 - Run the repeat or flake check once, at the end, on the changed specs.
-- Make at most 8 e2e calls in your run. One run of the e2e script is one call, with or without Docker. After the 8th call, stop. Report what you have and ask the captain.
+- Make at most 8 e2e calls in your run. One run of the e2e script is one call, with or without Docker. The cap is a hard stop. After the 8th call, do not make a 9th. Report what you have and ask the captain.
 - Never use `tail -f`, `sleep`, a poll loop or a monitor to wait for a run. Make one blocking call. If it times out, read the log once with `tail -n 40 <log>`, then report. Do not run it again.
 
 ## Find the repo's scripts
