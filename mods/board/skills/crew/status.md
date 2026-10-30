@@ -30,12 +30,21 @@ crew-status --run <run folder> <role> <state> "<summary>" [--order N] [--phase "
 
 ## Ship file
 
-`crew-ship` writes `~/.crew/<ticket>/ship.json`, which fleet reads. It is not a status file, and the board skips it. Every `crew-status` call from the first mate refreshes its `session` from `CLAUDE_CODE_SESSION_ID`. Agents in a sub-agent session skip this.
+`crew-ship` writes `~/.crew/<ship>/ship.json`, which fleet reads. It is not a status file, and the board skips it. Every `crew-status` call from the first mate refreshes its `session` from `CLAUDE_CODE_SESSION_ID`. Agents in a sub-agent session skip this.
 
 ```
-crew-ship create <ticket> --title T --fleet F [--task LINK] --repo P --remote HOST/PATH --worktree W --branch B
-crew-ship add-mr <ticket> --repo P --remote HOST/PATH --worktree W --branch B
-crew-ship url <ticket> <N> <MR link>
+crew-ship create <ship> --title T --fleet F [--task LINK] --repo P --remote HOST/PATH --worktree W --branch B
+crew-ship scout <ship> --title T --fleet F [--task LINK]
+crew-ship add-mr <ship> --repo P --remote HOST/PATH --worktree W --branch B
+crew-ship url <ship> <N> <MR link>
+crew-ship outcome <ship> "<one line>"
 ```
+
+Every `crew-ship` write refreshes `session` too. Agents in a sub-agent session skip this.
+
+- `scout` starts a ship with no MR: `mrs: []`. It takes no repo, remote, worktree or branch. A scout does not know its repo yet.
+- `outcome` sets the one-line result of a scout, for example "not a bug: config issue on acc". `add-mr` clears it again.
+- `kind` is `"ship"` after `crew-ship create`, and `"scout"` after `crew-ship scout`. `add-mr` does not change it.
+- `outcome` is `null` until `crew-ship outcome` sets it.
 
 The command refuses empty or badly formed values. It uses `CREW_BOARD_ROOT` in place of `~/.crew` when set.

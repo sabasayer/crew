@@ -42,7 +42,8 @@ Order numbers for the status files are in brackets. Each phase ends on its "Done
    - Start the dev server on a free port (see [e2e.md](e2e.md)). Restart a stale server. Write the port in the spec folder, in the file `port`.
    - Create the task ([tracking.md](tracking.md)).
    - Find the fleet name in the `/crew` text (`fleet: <name>`). If there is none, ask the captain. Suggest the repo name.
-   - Create the ship file: `crew-ship create <ticket> --title "<title>" --fleet <fleet> [--task <link>] --repo <main checkout> --remote <host/project path> --worktree <worktree> --branch <branch>`.
+   - `~/.crew/<ticket>/ship.json` already there? A scout ran first. The ticket name is the scout's ship name. Read `~/.crew/<ticket>/scout.md`. Run `crew-ship add-mr <ticket> --repo ... --remote ... --worktree ... --branch ...` in place of `crew-ship create`. Put the findings in the Spec. A task in `ship.json`? Reuse it. Do not make a new one.
+   - No ship file yet? Create it: `crew-ship create <ship> --title "<title>" --fleet <fleet> [--task <link>] --repo <main checkout> --remote <host/project path> --worktree <worktree> --branch <branch>`.
 
    Done when: the worktree is clean, `git log origin/<default>..HEAD` is empty, the server answers HTTP 200 on that port, the port file exists, `ship.json` exists, and the task exists or you told the captain why not.
 2. **Spec** (10, `gate-spec`). Tell the captain to start a grilling session to make the spec. You cannot start it. Write the spec to the spec folder. Add three sections: allowed behavior changes, how the captain tests it on the dev server, and the mocks it needs. Done when: the captain approves the spec.
@@ -85,4 +86,4 @@ A long idle makes the next turn re-write the whole context. So no agent waits.
 - Never write crew files, scripts or reports into the project repo. Put them in the run folder or the spec folder.
 - Never create, move or delete tags.
 - Never deploy.
-- Delete the spec folder (`spec/`) after the last MR merges. Keep `ship.json`.
+- Delete the spec folder (`spec/`) after the last MR merges. Keep `ship.json` and `scout.md`.
