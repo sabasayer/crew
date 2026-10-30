@@ -54,12 +54,19 @@ The skill and its briefs are in `mods/board/skills/crew/`.
 
 The plugin ships a second skill: `/crew-board:prove`. It runs the checks CI runs before a branch ships. The first mate runs it once, after review.
 
+A third skill is `/crew-board:scout`. It looks into a bug report before a crew run.
+A scout is a ship with no merge request yet. It finds the cause and writes `~/.crew/<ship>/scout.md`.
+It never edits a repo file. Found work? It hands over to `/crew`, which reads that file.
+Nothing to fix? It leaves a one-line outcome and stops.
+
 The crew skill has a file `e2e.md`. It lists what every e2e run must do. Agents then find the repo's own e2e scripts that do it.
 
 The plugin has a `bin` folder with three commands. Claude Code puts it on the PATH of the Bash tool when the plugin is on. A session loads it at the start.
 
 - `crew-status <role> <state> "<summary>" --run <run folder> [--order N]` writes a status file. It refuses an empty summary for `blocked`, `done` and `failed`.
-- `crew-ship` writes the ship file `~/.crew/<ticket>/ship.json` (fleet, title, task link, session, MRs). The board skips it. See `skills/crew/status.md`.
+- `crew-ship` writes the ship file `~/.crew/<ship>/ship.json` (fleet, title, task link, kind, outcome, session, MRs). The board skips it. See `skills/crew/status.md`.
+  `crew-ship scout <ship> --title T --fleet F` starts a ship with no MR. `crew-ship outcome <ship> "<one line>"` sets the result of a scout.
+  `kind` is `"ship"` or `"scout"`. `outcome` is the one-line result, or `null`.
 - `crew-visual-diff <test-results folder>` prints the changed pixels and the changed area of each Playwright `*-actual.png` and `*-expected.png` pair. Agents read this text and do not open the images.
 
 If you also use [mr-triage](https://github.com/sabasayer/mr-triage) and its `track-work` skill, the first mate adds a task for each branch.
