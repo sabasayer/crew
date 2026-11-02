@@ -3,7 +3,7 @@
 A Claude Code mod. It shows a live board of the agents in a `/crew` run.
 It only reads. It never writes the status files.
 
-![Crew board, full style](docs/img/full.png)
+![Crew board pane in Claude Code](docs/img/pane.png)
 
 ## Install
 
@@ -83,6 +83,8 @@ crew-board http://192.168.1.20:7777/?t=Xk3...
 ```
 
 Open one on any device in the same network. The page shows the same board: ship, agents, bars, stale and blocked states. It polls every 2 seconds and moves the ship while an agent runs.
+
+![Crew board web view](docs/img/full.png)
 
 - The link has a random token. Without it the server answers 403. It is made fresh at each start.
 - `/crew-board serve local` listens on this computer only. `/crew-board serve stop` stops it. It also stops when the session ends.
