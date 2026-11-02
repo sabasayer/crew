@@ -14,4 +14,6 @@ Read in this order: the repo's `AGENTS.md` or `CLAUDE.md`, the docs it points to
 - Commit on the current branch. Do not push. Use the project's commit style and attribution lines.
 - Set the ticket's Status to done. Add a `## Result` section: what changed, in short plain lines. Add each choice you made where the ticket was silent.
 
+Blocked? Stop and report, as [common.md](common.md) says. Do not retry a step more than twice.
+
 Done when: every check passes, the commit exists, and the Result section is written. Report what changed, the check results, the report numbers, and your choices.

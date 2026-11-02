@@ -16,7 +16,7 @@ Many lean crew runs in a row make a prototype. This skill is what happens before
 
 ## Phases
 
-1. **Idea grill.** Grill the idea in rounds: number each question and give a recommended answer. Find the core fun and the risky questions. Write the glossary in `CONTEXT.md` (use `domain-modeling` if installed). Done when: the captain agrees on the core fun and the questions.
+1. **Idea grill.** Grill the idea in rounds: number each question and give a recommended answer. Find the core fun and the risky questions. Write the glossary in `GLOSSARY.md` (use `domain-modeling` if installed). Done when: the captain agrees on the core fun and the questions.
 2. **Plan as toys.** Write `docs/prototypes.md`. Each toy answers one question, smallest first. Never plan "build the game". Done when: the captain approves the toy list.
 3. **Scaffold** (toy 1, ticket 01). See [Scaffold](#scaffold). Done when: the checks pass, the dev server answers, and the captain can open it on the phone.
 4. **Ticket loop.** Per ticket, run the crew skill's lean mode. Tickets go in `.scratch/toyN/NN-name.md`: Goal, Scope, Acceptance. Builders add a Result section. Board folder: `<project>-toyN-NN`.
