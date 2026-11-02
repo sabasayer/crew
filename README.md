@@ -3,6 +3,8 @@
 A Claude Code mod. It shows a live board of the agents in a `/crew` run.
 It only reads. It never writes the status files.
 
+![Crew board pane in Claude Code](docs/img/pane.png)
+
 ## Install
 
 In a Claude Code session:
@@ -82,6 +84,8 @@ crew-board http://192.168.1.20:7777/?t=Xk3...
 
 Open one on any device in the same network. The page shows the same board: ship, agents, bars, stale and blocked states. It polls every 2 seconds and moves the ship while an agent runs.
 
+![Crew board web view](docs/img/full.png)
+
 - The link has a random token. Without it the server answers 403. It is made fresh at each start.
 - `/crew-board serve local` listens on this computer only. `/crew-board serve stop` stops it. It also stops when the session ends.
 - Change the port with the `port` option. The default is 7777.
@@ -114,6 +118,8 @@ The option `style` is `full` or `simple`. The default is `full`.
   - Each agent row shows the hat before the role name: 3 by 2 pixels in the terminal, 5 by 2 in the desktop app.
   - `simple`: each agent is a small one-pixel crew member on the deck. No hats, no faces,
   and the rows are compact.
+
+![Crew board, simple style](docs/img/simple.png)
 
 Switch it with a command. The pane changes at once, and the choice is kept for the next sessions:
 
