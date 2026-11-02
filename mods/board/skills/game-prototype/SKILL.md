@@ -56,12 +56,6 @@ Lessons for the first mate. Use them in grilling, and say which one applies.
 - **No solved answers.** A spot or move that is always right is not a choice. Make good spots temporary or scarce.
 - **Show it, or it does not exist.** And show nothing that does nothing.
 - **One way per need.** Two ways to meet the same need make one dead weight.
-- **Never lock the fix.** A hazard must not block the action that ends it.
-- **A score needs a goal.** Use stars. ★ finishes, ★★ and ★★★ are targets set from the bots. Stars must be reachable without combos.
-- **Reward, do not nag.** "All done +20" feels better than "−20 per miss", with the same math.
-- **A payday moment.** Collect points at one clear moment, with a big number.
-- **Only player mistakes break streaks.** Bad luck must never cost a combo.
-- **One new thing per level.** The room holds only what its roster needs.
 - **Bots judge balance, not fun.** Bots see everything. Humans score lower.
 
 ## Rules
