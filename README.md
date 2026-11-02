@@ -1,5 +1,7 @@
 # crew-board
 
+> **Moved.** Crew now lives in [sabasayer/fleet](https://github.com/sabasayer/fleet/tree/main/crew). Install it with `/plugin install crew-board --marketplace sabasayer/fleet`. This repo is archived.
+
 A Claude Code mod. It shows a live board of the agents in a `/crew` run.
 It only reads. It never writes the status files.
 
