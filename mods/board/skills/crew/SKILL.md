@@ -19,7 +19,11 @@ Before you ask, find the shared premise. Two failed attempts often rest on one w
 - **Feature or bugfix:** Spec, Red, Green. Tests fail first, then pass.
 - **Migration or refactor:** Spec, Pin, Move. Behavior stays the same. Tests pass before and after. A test may fail first only for an allowed behavior change.
 
-Both modes end the same way: Review, Prove, Captain test, Ship.
+These two modes end with Review, Prove, Captain test, Ship.
+
+- **Lean:** Ticket, Build, Prove, Captain test, Ship. One builder, no spec gate, no review. See [Lean mode](#lean-mode).
+
+Pick lean only when the captain asks for it, or the project docs say so. It fits prototypes, game toys, solo repos and small fixes. It does not fit code that a team reviews.
 
 ## Project commands
 
@@ -59,11 +63,34 @@ Order numbers for the status files are in brackets. Each phase ends on its "Done
 
 Next MR of the same ticket: start phase 4 for it while the last MR waits for review. Use a new run folder. Add its entry first: `crew-ship add-mr <ticket> --repo ... --remote ... --worktree ... --branch ...`. It prints the number N for the run folder.
 
+## Lean mode
+
+The captain plays or tests after every ticket. Speed matters more than review. A lean run is one ticket. Many lean runs in a row make a project.
+
+Phases, with orders:
+
+1. **Fetch** (before the chain). Read the repo's `AGENTS.md` or `CLAUDE.md`. Check the tree is clean. Work in the main checkout on the default branch, unless the project docs say to branch. Keep one dev server running for the whole project. Reuse it between runs. Then make the ship file, so the run shows in fleet. Find the fleet name in the `/crew` text (`fleet: <name>`). If there is none, ask the captain. Suggest the repo name. `~/.crew/<ticket>/ship.json` already there? A scout ran first. Run `crew-ship add-mr <ticket> --repo ... --remote ... --worktree ... --branch ...`. No ship file yet? Run `crew-ship create <ship> --title "<title>" --fleet <fleet> [--task <link>] --repo <main checkout> --remote <host/project path> --worktree <main checkout> --branch <default branch>`. The worktree is the main checkout, because lean works there. The branch is the default branch. A lean run has no MR, so skip `crew-ship url`. Done when: the tree is clean, the server answers HTTP 200, and `ship.json` exists.
+2. **Ticket** (no gate). Write the ticket from the captain's grilling round. Sections: Goal, Scope, Acceptance. Put it where the project keeps tickets, else in the spec folder. Done when: every decision in the ticket came from the captain or the project docs.
+3. **Build** (10, `build`). First queue the board. Run `crew-status` with `queued` for `build` (10), `prove` (20) and `gate-captain` (30), all in one command ([status.md](status.md)). Then call `mcp__crew-board__crew_board_open` with the ticket name. Skip this if the tool is not there. Spawn one agent in the background with [briefs/build.md](briefs/build.md). It writes the tests and the code, and commits. It does not push. Done when: it reports and its commit is on the branch.
+4. **Prove** (20, `prove`). Run the project's checks yourself, all of them. Check the tree is clean. Read the agent's diff summary. Did the build make a new e2e screenshot? Look at it. If the project has a bot playtest or another report script, run it and read it. Done when: every check passes and you pushed.
+5. **Captain test** (30, `gate-captain`). Set `gate-captain` to `blocked`, with a summary of what the captain must do. Set it to `done` after the yes. Give the captain the dev server URL, what changed, and what to watch for. Add numbers from the report, if there is one. Done when: the captain gives feedback or says okay.
+6. **Ship.** Push right after Prove. If the project uses merge requests, use its ship flow instead.
+
+After the captain test:
+
+- Write the captain's feedback and decisions where the project logs them, for example `docs/playtests.md`. Commit and push.
+- Grill the next change in rounds. Number the questions and give a recommended answer for each.
+- Bug report from the captain: read the code first. Report what you found before you write a ticket.
+- One run folder per ticket: `<project>-<ticket>`.
+
+Estimates for lean builds come from this ticket's size, as for any run.
+
 ## Files for agents
 
 - **Status files:** [status.md](status.md). The crew board shows them. Every agent writes them with `crew-status`. Put the run folder, the role name and the order in each spawn text. Tell each agent to add `crew-status` to the end of its next real command and never make a call only for status. You do the same: your own status calls ride on real commands.
 - **E2E runs:** [e2e.md](e2e.md). Red, Pin, Green and Move follow it.
 - **Every agent:** [briefs/common.md](briefs/common.md).
+- **Lean builder:** [briefs/build.md](briefs/build.md).
 
 Before each agent starts, tell the captain the expected time. Work out the estimate then, from this ticket: the size of the spec, the files to change, and the checks to run. Do not reuse numbers from an earlier run. Put the estimate in the phase of the status, for example `--phase "building, about 12 min"`. When the captain asks, show the newest line of each file. Do not say "still working".
 
