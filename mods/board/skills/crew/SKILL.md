@@ -12,6 +12,8 @@ A bad link breaks the chain. So check each hand-off before the next agent starts
 
 If an agent fails twice, or reaches its e2e budget, stop and ask the captain. Never take over its work. Never loop e2e runs yourself.
 
+Before you ask, find the shared premise. Two failed attempts often rest on one wrong belief. Write that belief in one sentence. Tell the captain the sentence with the failure. Do not start a third attempt until the captain answers.
+
 ## Pick the mode
 
 - **Feature or bugfix:** Spec, Red, Green. Tests fail first, then pass.
@@ -48,7 +50,7 @@ Order numbers for the status files are in brackets. Each phase ends on its "Done
    Done when: the worktree is clean, `git log origin/<default>..HEAD` is empty, the server answers HTTP 200 on that port, the port file exists, `ship.json` exists, and the task exists or you told the captain why not.
 2. **Spec** (10, `gate-spec`). Tell the captain to start a grilling session to make the spec. You cannot start it. Write the spec to the spec folder. Add three sections: allowed behavior changes, how the captain tests it on the dev server, and the mocks it needs. Done when: the captain approves the spec.
 3. **Spike** (20, `spike`, only when a technical unknown can change the spec). Spawn with [briefs/spike.md](briefs/spike.md). One agent edits the working tree at a time. Done when: the answer is in the spec.
-4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Give the command to see them: `! git -C <worktree> diff`. The captain's session may not be in the repo, so `/diff` can fail. Back to this phase if they do not pass. Done when: the captain approves the tests.
+4. **Red or Pin** (30). Spawn with [briefs/red.md](briefs/red.md). Gate (40, `gate-tests`): captain reads the tests. Give the command to see them: `! git -C <worktree> diff`. Tell the captain to ask of each test: "Would it pass if the code did nothing?" If yes, send it back. The captain's session may not be in the repo, so `/diff` can fail. Back to this phase if they do not pass. Done when: the captain approves the tests.
 5. **Green or Move** (50). Spawn with [briefs/green.md](briefs/green.md). It may not edit tests. Done when: you checked its diff and its specs pass.
 6. **Review** (60, `review-standards` and `review-spec` run in parallel). When they start, set the task state `reviewing`. Spawn with [briefs/review.md](briefs/review.md). They report only. Then one fixer (70) gets the findings. Spawn it with [briefs/fixer.md](briefs/fixer.md). Done when: each finding is fixed or rejected in writing.
 7. **Prove** (80, `browser`). Run `/prove` once. Then spawn the browser agent with [briefs/browser.md](briefs/browser.md). Add missing mocks. Done when: `/prove` shows `pass` for every check and each UI is `ok` or `problem`.

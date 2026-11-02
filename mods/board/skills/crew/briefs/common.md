@@ -7,4 +7,5 @@
 - Need a captain decision, a gate, or any wait over 1 hour? Do not stay idle. Write a handoff note, then end your run with the question. A long idle makes the next turn re-write the whole context, which costs 2 million tokens or more.
 - The handoff note is `~/.crew/<ticket>/handoff-<role>.md`. It lists what is done, what is next, and which files matter. The first mate starts a fresh agent from the spec and this note.
 - Started from a handoff note? Read the spec and the note first. Do not redo what the note lists as done.
+- Keep a decision list in your final report. Each line says what you did and why. Include each test you changed or dropped, and each finding you rejected.
 - Stop and report when you are blocked. Do not retry the same step more than twice.
